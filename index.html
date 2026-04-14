@@ -194,51 +194,50 @@
         <!-- ==================== DASHBOARD PAGE ==================== -->
         <div class="page active" id="page-dashboard">
           <div class="stats-grid">
+            <!-- Total Surat Diproses -->
             <div class="stat-card">
               <div class="stat-header">
                 <div class="stat-icon blue">
                   <i class="fas fa-file-signature"></i>
                 </div>
-                <span class="stat-trend up"
-                  ><i class="fas fa-arrow-up"></i> 12%</span
-                >
               </div>
-              <div class="stat-value">156</div>
+              <div class="stat-value" id="dashboard-total-surat">-</div>
               <div class="stat-label">Total Surat Diproses</div>
             </div>
+            <!-- Kartu MoU -->
             <div class="stat-card">
               <div class="stat-header">
                 <div class="stat-icon green">
-                  <i class="fas fa-handshake"></i>
+                  <i class="fas fa-file-contract"></i>
                 </div>
-                <span class="stat-trend up"
-                  ><i class="fas fa-arrow-up"></i> 8%</span
+              </div>
+              <div class="stat-value" id="dashboard-mou">-</div>
+              <div class="stat-label">
+                MoU
+                <small style="color: var(--text-secondary); font-weight: 400"
+                  >(Memorandum of Understanding)</small
                 >
               </div>
-              <div class="stat-value">42</div>
-              <div class="stat-label">MoU Aktif</div>
             </div>
+            <!-- Mahasiswa Degree (sebelumnya Mahasiswa Internasional) -->
             <div class="stat-card">
               <div class="stat-header">
-                <div class="stat-icon yellow"><i class="fas fa-globe"></i></div>
-                <span class="stat-trend up"
-                  ><i class="fas fa-arrow-up"></i> 5%</span
-                >
+                <div class="stat-icon green">
+                  <i class="fas fa-user-graduate"></i>
+                </div>
               </div>
-              <div class="stat-value">18</div>
-              <div class="stat-label">Negara Mitra</div>
+              <div class="stat-value" id="dashboard-mahasiswa-degree">-</div>
+              <div class="stat-label">Mahasiswa Degree</div>
             </div>
+            <!-- Penerimaan Mahasiswa Asing (sebelumnya Dosen Tamu Asing) -->
             <div class="stat-card">
               <div class="stat-header">
                 <div class="stat-icon red">
-                  <i class="fas fa-calendar-check"></i>
+                  <i class="fas fa-hand-holding-heart"></i>
                 </div>
-                <span class="stat-trend down"
-                  ><i class="fas fa-arrow-down"></i> 3%</span
-                >
               </div>
-              <div class="stat-value">27</div>
-              <div class="stat-label">Agenda Bulan Ini</div>
+              <div class="stat-value" id="dashboard-penerimaan-asing">-</div>
+              <div class="stat-label">Penerimaan Mahasiswa Asing</div>
             </div>
           </div>
 
@@ -370,42 +369,50 @@
         <!-- ==================== TATA USAHA PAGE ==================== -->
         <div class="page" id="page-tata-usaha">
           <div class="stats-grid">
-  <!-- Tata Usaha -->
-  <div class="stat-card">
-    <div class="stat-header">
-      <div class="stat-icon blue"><i class="fas fa-building"></i></div>
-    </div>
-    <div class="stat-value" id="count-tata-usaha">-</div>
-    <div class="stat-label">Tata Usaha</div>
-  </div>
-  
-  <!-- Kerjasama -->
-  <div class="stat-card">
-    <div class="stat-header">
-      <div class="stat-icon green"><i class="fas fa-handshake"></i></div>
-    </div>
-    <div class="stat-value" id="count-kerjasama">-</div>
-    <div class="stat-label">Kerjasama</div>
-  </div>
-  
-  <!-- Urusan Mahasiswa Internasional -->
-  <div class="stat-card">
-    <div class="stat-header">
-      <div class="stat-icon yellow"><i class="fas fa-user-graduate"></i></div>
-    </div>
-    <div class="stat-value" id="count-umi">-</div>
-    <div class="stat-label">Urusan Mahasiswa Internasional</div>
-  </div>
-  
-  <!-- Mobilitas Internasional -->
-  <div class="stat-card">
-    <div class="stat-header">
-      <div class="stat-icon red"><i class="fas fa-globe-americas"></i></div>
-    </div>
-    <div class="stat-value" id="count-mobilitas">-</div>
-    <div class="stat-label">Mobilitas Internasional</div>
-  </div>
-</div>
+            <!-- Tata Usaha -->
+            <div class="stat-card">
+              <div class="stat-header">
+                <div class="stat-icon blue">
+                  <i class="fas fa-building"></i>
+                </div>
+              </div>
+              <div class="stat-value" id="count-tata-usaha">-</div>
+              <div class="stat-label">Tata Usaha</div>
+            </div>
+
+            <!-- Kerjasama -->
+            <div class="stat-card">
+              <div class="stat-header">
+                <div class="stat-icon green">
+                  <i class="fas fa-handshake"></i>
+                </div>
+              </div>
+              <div class="stat-value" id="count-kerjasama">-</div>
+              <div class="stat-label">Kerjasama</div>
+            </div>
+
+            <!-- Urusan Mahasiswa Internasional -->
+            <div class="stat-card">
+              <div class="stat-header">
+                <div class="stat-icon yellow">
+                  <i class="fas fa-user-graduate"></i>
+                </div>
+              </div>
+              <div class="stat-value" id="count-umi">-</div>
+              <div class="stat-label">Urusan Mahasiswa Internasional</div>
+            </div>
+
+            <!-- Mobilitas Internasional -->
+            <div class="stat-card">
+              <div class="stat-header">
+                <div class="stat-icon red">
+                  <i class="fas fa-globe-americas"></i>
+                </div>
+              </div>
+              <div class="stat-value" id="count-mobilitas">-</div>
+              <div class="stat-label">Mobilitas Internasional</div>
+            </div>
+          </div>
 
           <!-- ==================== RIWAYAT SURAT ==================== -->
           <div class="card">
@@ -419,13 +426,13 @@
               </h3>
               <div class="card-actions">
                 <!-- ✅ Tombol Baru: Buat Nomor Surat -->
-      <button
-  id="btnBuatNomorSurat"
-  class="btn btn-primary btn-sm"
-  title="Generate nomor surat baru"
->
-  <i class="fas fa-hashtag"></i> Buat Nomor Surat
-</button>
+                <button
+                  id="btnBuatNomorSurat"
+                  class="btn btn-primary btn-sm"
+                  title="Generate nomor surat baru"
+                >
+                  <i class="fas fa-hashtag"></i> Buat Nomor Surat
+                </button>
                 <button
                   class="btn btn-outline btn-sm"
                   onclick="exportTable('surat')"
@@ -452,7 +459,6 @@
                   style="max-width: 300px"
                   onkeyup="searchSuratTable()"
                 />
-
               </div>
 
               <!-- Loading State -->
@@ -511,319 +517,659 @@
             </div>
           </div>
           <!-- ==================== MODAL BUAT NOMOR SURAT ==================== -->
-<div id="modalBuatNomor" class="modal-overlay" style="display: none;">
-  <div class="modal" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
-    
-    <!-- Modal Header -->
-    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border);">
-      <h3 style="margin: 0; font-size: 16px; font-weight: 700;">
-        <i class="fas fa-hashtag" style="color: var(--primary); margin-right: 8px;"></i>
-        Buat Nomor Surat
-      </h3>
-      <button class="modal-close" onclick="closeBuatNomorModal()" style="width: 32px; height: 32px; border: none; background: var(--bg-main); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    
-    <!-- Modal Body - Form Input Surat (Sama dengan form utama) -->
-    <div class="modal-body" style="padding: 20px;">
-      <form id="formModalNomor" onsubmit="return false;" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
-        
-        <!-- Sumber Surat -->
-        <div>
-          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Sumber Surat *</label>
-          <select id="modalSumber" class="form-control" required>
-            <option value="">-- Pilih Sumber --</option>
-            <option value="Tata Usaha">Tata Usaha</option>
-            <option value="Kerjasama">Kerjasama</option>
-            <option value="Urusan Mahasiswa Internasional">Urusan Mahasiswa Internasional</option>
-            <option value="Mobilitas Internasional">Mobilitas Internasional</option>
-          </select>
-        </div>
+          <div id="modalBuatNomor" class="modal-overlay" style="display: none">
+            <div
+              class="modal"
+              style="max-width: 600px; max-height: 90vh; overflow-y: auto"
+            >
+              <!-- Modal Header -->
+              <div
+                class="modal-header"
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  padding: 16px 20px;
+                  border-bottom: 1px solid var(--border);
+                "
+              >
+                <h3 style="margin: 0; font-size: 16px; font-weight: 700">
+                  <i
+                    class="fas fa-hashtag"
+                    style="color: var(--primary); margin-right: 8px"
+                  ></i>
+                  Buat Nomor Surat
+                </h3>
+                <button
+                  class="modal-close"
+                  onclick="closeBuatNomorModal()"
+                  style="
+                    width: 32px;
+                    height: 32px;
+                    border: none;
+                    background: var(--bg-main);
+                    border-radius: 8px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: var(--text-muted);
+                  "
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
 
-        <!-- Tujuan Surat -->
-        <div>
-          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Tujuan Surat *</label>
-          <select id="modalTujuan" class="form-control" required>
-            <option value="">-- Pilih Tujuan --</option>
-            <option value="Badan Penjamin Mutu">Badan Penjamin Mutu</option>
-            <option value="Biro Sumber Daya Manusia">Biro Sumber Daya Manusia</option>
-            <option value="Sekretaris Rektorat">Sekretaris Rektorat</option>
-            <option value="UPT Pusat Pengembangan Teknologi Informasi dan Komunikasi">UPT Pusat Pengembangan TIK</option>
-            <option value="Yayasan Perguruan Tinggi Darussalam">Yayasan PT Darussalam</option>
-            <option value="Sarana dan Prasarana">Sarana dan Prasarana</option>
-            <option value="Mitra Kerjasama">Mitra Kerjasama</option>
-            <option value="Pusat Bahasa">Pusat Bahasa</option>
-            <option value="Biro Administrasi Akademik">Biro Administrasi Akademik</option>
-            <option value="Biro Administrasi Keuangan">Biro Administrasi Keuangan</option>
-            <option value="Kemendikbudristekdikti">Kemendikbudristekdikti</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
-        </div>
+              <!-- Modal Body - Form Input Surat (Sama dengan form utama) -->
+              <div class="modal-body" style="padding: 20px">
+                <form
+                  id="formModalNomor"
+                  onsubmit="return false;"
+                  style="
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                    gap: 16px;
+                  "
+                >
+                  <!-- Sumber Surat -->
+                  <div>
+                    <label
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: var(--text-secondary);
+                      "
+                      >Sumber Surat *</label
+                    >
+                    <select id="modalSumber" class="form-control" required>
+                      <option value="">-- Pilih Sumber --</option>
+                      <option value="Tata Usaha">Tata Usaha</option>
+                      <option value="Kerjasama">Kerjasama</option>
+                      <option value="Urusan Mahasiswa Internasional">
+                        Urusan Mahasiswa Internasional
+                      </option>
+                      <option value="Mobilitas Internasional">
+                        Mobilitas Internasional
+                      </option>
+                    </select>
+                  </div>
 
-        <!-- Jenis Naskah Dinas -->
-        <div>
-          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Jenis Naskah Dinas *</label>
-          <select id="modalJenisNaskah" class="form-control" required>
-            <option value="">-- Pilih Jenis --</option>
-            <option value="Instruksi">Instruksi</option>
-            <option value="Surat Edaran">Surat Edaran</option>
-            <option value="Maklumat">Maklumat</option>
-            <option value="Surat Tugas">Surat Tugas</option>
-            <option value="Nota Dinas">Nota Dinas</option>
-            <option value="Disposisi">Disposisi</option>
-            <option value="Surat Dinas">Surat Dinas</option>
-            <option value="Surat Undangan">Surat Undangan</option>
-            <option value="Nota Kesepahaman">Nota Kesepahaman</option>
-            <option value="Surat Perjanjian">Surat Perjanjian</option>
-            <option value="Surat Kuasa/Mandat">Surat Kuasa/Mandat</option>
-            <option value="Surat Pernyataan">Surat Pernyataan</option>
-            <option value="Surat Pengantar">Surat Pengantar</option>
-            <option value="Surat Permohonan">Surat Permohonan</option>
-            <option value="Surat Keterangan">Surat Keterangan</option>
-            <option value="Surat Rekomendasi">Surat Rekomendasi</option>
-            <option value="Berita Acara">Berita Acara</option>
-            <option value="Notula Rapat">Notula Rapat</option>
-            <option value="Sertifikat">Sertifikat</option>
-            <option value="Laporan">Laporan</option>
-            <option value="Telaah Staf">Telaah Staf</option>
-          </select>
-        </div>
+                  <!-- Tujuan Surat -->
+                  <div>
+                    <label
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: var(--text-secondary);
+                      "
+                      >Tujuan Surat *</label
+                    >
+                    <select id="modalTujuan" class="form-control" required>
+                      <option value="">-- Pilih Tujuan --</option>
+                      <option value="Badan Penjamin Mutu">
+                        Badan Penjamin Mutu
+                      </option>
+                      <option value="Biro Sumber Daya Manusia">
+                        Biro Sumber Daya Manusia
+                      </option>
+                      <option value="Sekretaris Rektorat">
+                        Sekretaris Rektorat
+                      </option>
+                      <option
+                        value="UPT Pusat Pengembangan Teknologi Informasi dan Komunikasi"
+                      >
+                        UPT Pusat Pengembangan TIK
+                      </option>
+                      <option value="Yayasan Perguruan Tinggi Darussalam">
+                        Yayasan PT Darussalam
+                      </option>
+                      <option value="Sarana dan Prasarana">
+                        Sarana dan Prasarana
+                      </option>
+                      <option value="Mitra Kerjasama">Mitra Kerjasama</option>
+                      <option value="Pusat Bahasa">Pusat Bahasa</option>
+                      <option value="Biro Administrasi Akademik">
+                        Biro Administrasi Akademik
+                      </option>
+                      <option value="Biro Administrasi Keuangan">
+                        Biro Administrasi Keuangan
+                      </option>
+                      <option value="Kemendikbudristekdikti">
+                        Kemendikbudristekdikti
+                      </option>
+                      <option value="Lainnya">Lainnya</option>
+                    </select>
+                  </div>
 
-        <!-- Klasifikasi Arsip -->
-        <div>
-          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Klasifikasi Arsip *</label>
-          <select id="modalKlasArsip" class="form-control" required>
-            <option value="">-- Pilih Klasifikasi --</option>
-            <option value="Penerimaan Mahasiswa">Penerimaan Mahasiswa</option>
-            <option value="Kurikulum">Kurikulum</option>
-            <option value="Tenaga Pendidik/Dosen">Tenaga Pendidik/Dosen</option>
-            <option value="Kemahasiswaan">Kemahasiswaan</option>
-            <option value="Perkuliahan">Perkuliahan</option>
-            <option value="Data Informasi dan Pengembang Akademik">Data Informasi Akademik</option>
-            <option value="Penunjang Akademik">Penunjang Akademik</option>
-            <option value="Penelitian">Penelitian</option>
-            <option value="Pengabdian kpd Masyarakat">Pengabdian Masyarakat</option>
-            <option value="Publikasi Jurnal/Buku">Publikasi Jurnal/Buku</option>
-            <option value="Wisuda dan Alumni">Wisuda dan Alumni</option>
-            <option value="Penjaminan Mutu">Penjaminan Mutu</option>
-            <option value="Tata Pamong">Tata Pamong</option>
-            <option value="Perencanaan">Perencanaan</option>
-            <option value="Hukum">Hukum</option>
-            <option value="Organisasi dan Ketatalaksanaan">Organisasi</option>
-            <option value="Ketatausahaan">Ketatausahaan</option>
-            <option value="Kerumahtanggaan">Kerumahtanggaan</option>
-            <option value="Perlengkapan">Perlengkapan</option>
-            <option value="Hubungan Masyarakat">Hubungan Masyarakat</option>
-            <option value="Pendidikan dan Pelatihan">Pendidikan & Pelatihan</option>
-            <option value="Teknologi, Informasi dan Komunikasi">Teknologi & Informasi</option>
-            <option value="Pengawasan">Pengawasan</option>
-            <option value="Kepegawaian">Kepegawaian</option>
-            <option value="Keuangan">Keuangan</option>
-            <option value="Badan Usaha/Unit Usaha">Badan Usaha</option>
-          </select>
-        </div>
+                  <!-- Jenis Naskah Dinas -->
+                  <div>
+                    <label
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: var(--text-secondary);
+                      "
+                      >Jenis Naskah Dinas *</label
+                    >
+                    <select id="modalJenisNaskah" class="form-control" required>
+                      <option value="">-- Pilih Jenis --</option>
+                      <option value="Instruksi">Instruksi</option>
+                      <option value="Surat Edaran">Surat Edaran</option>
+                      <option value="Maklumat">Maklumat</option>
+                      <option value="Surat Tugas">Surat Tugas</option>
+                      <option value="Nota Dinas">Nota Dinas</option>
+                      <option value="Disposisi">Disposisi</option>
+                      <option value="Surat Dinas">Surat Dinas</option>
+                      <option value="Surat Undangan">Surat Undangan</option>
+                      <option value="Nota Kesepahaman">Nota Kesepahaman</option>
+                      <option value="Surat Perjanjian">Surat Perjanjian</option>
+                      <option value="Surat Kuasa/Mandat">
+                        Surat Kuasa/Mandat
+                      </option>
+                      <option value="Surat Pernyataan">Surat Pernyataan</option>
+                      <option value="Surat Pengantar">Surat Pengantar</option>
+                      <option value="Surat Permohonan">Surat Permohonan</option>
+                      <option value="Surat Keterangan">Surat Keterangan</option>
+                      <option value="Surat Rekomendasi">
+                        Surat Rekomendasi
+                      </option>
+                      <option value="Berita Acara">Berita Acara</option>
+                      <option value="Notula Rapat">Notula Rapat</option>
+                      <option value="Sertifikat">Sertifikat</option>
+                      <option value="Laporan">Laporan</option>
+                      <option value="Telaah Staf">Telaah Staf</option>
+                    </select>
+                  </div>
 
-        <!-- Link Dokumen -->
-        <div>
-          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Link Dokumen</label>
-          <input type="url" id="modalDeliverableLink" class="form-control" placeholder="https://drive.google.com/...">
-        </div>
+                  <!-- Klasifikasi Arsip -->
+                  <div>
+                    <label
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: var(--text-secondary);
+                      "
+                      >Klasifikasi Arsip *</label
+                    >
+                    <select id="modalKlasArsip" class="form-control" required>
+                      <option value="">-- Pilih Klasifikasi --</option>
+                      <option value="Penerimaan Mahasiswa">
+                        Penerimaan Mahasiswa
+                      </option>
+                      <option value="Kurikulum">Kurikulum</option>
+                      <option value="Tenaga Pendidik/Dosen">
+                        Tenaga Pendidik/Dosen
+                      </option>
+                      <option value="Kemahasiswaan">Kemahasiswaan</option>
+                      <option value="Perkuliahan">Perkuliahan</option>
+                      <option value="Data Informasi dan Pengembang Akademik">
+                        Data Informasi Akademik
+                      </option>
+                      <option value="Penunjang Akademik">
+                        Penunjang Akademik
+                      </option>
+                      <option value="Penelitian">Penelitian</option>
+                      <option value="Pengabdian kpd Masyarakat">
+                        Pengabdian Masyarakat
+                      </option>
+                      <option value="Publikasi Jurnal/Buku">
+                        Publikasi Jurnal/Buku
+                      </option>
+                      <option value="Wisuda dan Alumni">
+                        Wisuda dan Alumni
+                      </option>
+                      <option value="Penjaminan Mutu">Penjaminan Mutu</option>
+                      <option value="Tata Pamong">Tata Pamong</option>
+                      <option value="Perencanaan">Perencanaan</option>
+                      <option value="Hukum">Hukum</option>
+                      <option value="Organisasi dan Ketatalaksanaan">
+                        Organisasi
+                      </option>
+                      <option value="Ketatausahaan">Ketatausahaan</option>
+                      <option value="Kerumahtanggaan">Kerumahtanggaan</option>
+                      <option value="Perlengkapan">Perlengkapan</option>
+                      <option value="Hubungan Masyarakat">
+                        Hubungan Masyarakat
+                      </option>
+                      <option value="Pendidikan dan Pelatihan">
+                        Pendidikan & Pelatihan
+                      </option>
+                      <option value="Teknologi, Informasi dan Komunikasi">
+                        Teknologi & Informasi
+                      </option>
+                      <option value="Pengawasan">Pengawasan</option>
+                      <option value="Kepegawaian">Kepegawaian</option>
+                      <option value="Keuangan">Keuangan</option>
+                      <option value="Badan Usaha/Unit Usaha">
+                        Badan Usaha
+                      </option>
+                    </select>
+                  </div>
 
-        <!-- Jumlah Surat -->
-        <div>
-          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Jumlah Nomor *</label>
-          <input type="number" id="modalJumlahSurat" class="form-control" min="1" max="50" value="1">
-        </div>
+                  <!-- Link Dokumen -->
+                  <div>
+                    <label
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: var(--text-secondary);
+                      "
+                      >Link Dokumen</label
+                    >
+                    <input
+                      type="url"
+                      id="modalDeliverableLink"
+                      class="form-control"
+                      placeholder="https://drive.google.com/..."
+                    />
+                  </div>
 
-        <!-- Keterangan -->
-        <div style="grid-column: 1 / -1;">
-          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Keterangan</label>
-          <textarea id="modalKeterangan" class="form-control" rows="2" placeholder="Catatan untuk preview..."></textarea>
-        </div>
+                  <!-- Jumlah Surat -->
+                  <div>
+                    <label
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: var(--text-secondary);
+                      "
+                      >Jumlah Nomor *</label
+                    >
+                    <input
+                      type="number"
+                      id="modalJumlahSurat"
+                      class="form-control"
+                      min="1"
+                      max="50"
+                      value="1"
+                    />
+                  </div>
 
-        <!-- Buttons -->
-<div style="grid-column: 1 / -1; display: flex; gap: 12px; margin-top: 8px;">
-  <button type="button" class="btn btn-outline" onclick="previewNomorSuratModal()">
-    <i class="fas fa-eye"></i> Preview Nomor
-  </button>
-  <button type="button" class="btn btn-primary" onclick="saveNomorSuratModal()">
-    <i class="fas fa-save"></i> Simpan
-  </button>
-  <button type="button" class="btn btn-outline" onclick="copyNomorSuratModal()">
-    <i class="fas fa-copy"></i> Salin Nomor
-  </button>
-  <button type="button" class="btn btn-outline" onclick="resetModalNomorSurat()">
-    <i class="fas fa-redo"></i> Reset
-  </button>
-</div>
-      </form>
+                  <!-- Keterangan -->
+                  <div style="grid-column: 1 / -1">
+                    <label
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: var(--text-secondary);
+                      "
+                      >Keterangan</label
+                    >
+                    <textarea
+                      id="modalKeterangan"
+                      class="form-control"
+                      rows="2"
+                      placeholder="Catatan untuk preview..."
+                    ></textarea>
+                  </div>
 
-      <!-- Preview Box -->
-      <div id="modalPreviewBox" style="grid-column: 1 / -1; margin-top: 16px; padding: 12px; background: var(--bg-main); border-radius: 8px; font-size: 13px; display: none; border-left: 4px solid var(--info);"></div>
-    </div>
-    
-  </div>
-</div>
+                  <!-- Buttons -->
+                  <div
+                    style="
+                      grid-column: 1 / -1;
+                      display: flex;
+                      gap: 12px;
+                      margin-top: 8px;
+                    "
+                  >
+                    <button
+                      type="button"
+                      class="btn btn-outline"
+                      onclick="previewNomorSuratModal()"
+                    >
+                      <i class="fas fa-eye"></i> Preview Nomor
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-primary"
+                      onclick="saveNomorSuratModal()"
+                    >
+                      <i class="fas fa-save"></i> Simpan
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline"
+                      onclick="copyNomorSuratModal()"
+                    >
+                      <i class="fas fa-copy"></i> Salin Nomor
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline"
+                      onclick="resetModalNomorSurat()"
+                    >
+                      <i class="fas fa-redo"></i> Reset
+                    </button>
+                  </div>
+                </form>
+
+                <!-- Preview Box -->
+                <div
+                  id="modalPreviewBox"
+                  style="
+                    grid-column: 1 / -1;
+                    margin-top: 16px;
+                    padding: 12px;
+                    background: var(--bg-main);
+                    border-radius: 8px;
+                    font-size: 13px;
+                    display: none;
+                    border-left: 4px solid var(--info);
+                  "
+                ></div>
+              </div>
+            </div>
+          </div>
 
           <!-- ==================== MODAL EDIT ==================== -->
-<div id="modalEditSurat" class="modal-overlay" style="display: none">
-  <div class="modal" style="max-width: 500px">
-    <div class="modal-header">
-      <h3>✏️ Edit Data Surat</h3>
-      <button class="modal-close" onclick="closeEditModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="editNomorUrut" />
+          <div id="modalEditSurat" class="modal-overlay" style="display: none">
+            <div class="modal" style="max-width: 500px">
+              <div class="modal-header">
+                <h3>✏️ Edit Data Surat</h3>
+                <button class="modal-close" onclick="closeEditModal()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="modal-body">
+                <input type="hidden" id="editNomorUrut" />
 
-      <!-- Sumber Surat -->
-      <div class="form-group">
-        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary)">Sumber Surat *</label>
-        <select id="editSumber" class="form-control" required>
-          <option value="">-- Pilih Sumber --</option>
-          <option value="Tata Usaha">Tata Usaha</option>
-          <option value="Kerjasama">Kerjasama</option>
-          <option value="Urusan Mahasiswa Internasional">Urusan Mahasiswa Internasional</option>
-          <option value="Mobilitas Internasional">Mobilitas Internasional</option>
-        </select>
-      </div>
+                <!-- Sumber Surat -->
+                <div class="form-group">
+                  <label
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--text-secondary);
+                    "
+                    >Sumber Surat *</label
+                  >
+                  <select id="editSumber" class="form-control" required>
+                    <option value="">-- Pilih Sumber --</option>
+                    <option value="Tata Usaha">Tata Usaha</option>
+                    <option value="Kerjasama">Kerjasama</option>
+                    <option value="Urusan Mahasiswa Internasional">
+                      Urusan Mahasiswa Internasional
+                    </option>
+                    <option value="Mobilitas Internasional">
+                      Mobilitas Internasional
+                    </option>
+                  </select>
+                </div>
 
-      <!-- Tujuan Surat -->
-      <div class="form-group">
-        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary)">Tujuan Surat *</label>
-        <select id="editTujuan" class="form-control" required>
-          <option value="">-- Pilih Tujuan --</option>
-          <option value="Badan Penjamin Mutu">Badan Penjamin Mutu</option>
-          <option value="Biro Sumber Daya Manusia">Biro Sumber Daya Manusia</option>
-          <option value="Sekretaris Rektorat">Sekretaris Rektorat</option>
-          <option value="UPT Pusat Pengembangan Teknologi Informasi dan Komunikasi">UPT Pusat Pengembangan TIK</option>
-          <option value="Yayasan Perguruan Tinggi Darussalam">Yayasan PT Darussalam</option>
-          <option value="Sarana dan Prasarana">Sarana dan Prasarana</option>
-          <option value="Mitra Kerjasama">Mitra Kerjasama</option>
-          <option value="Pusat Bahasa">Pusat Bahasa</option>
-          <option value="Biro Administrasi Akademik">Biro Administrasi Akademik</option>
-          <option value="Biro Administrasi Keuangan">Biro Administrasi Keuangan</option>
-          <option value="Biro Kesejahteraan Keluarga">Biro Kesejahteraan Keluarga</option>
-          <option value="Kemendikbudristekdikti">Kemendikbudristekdikti</option>
-          <option value="Direktorat Kepesantrenan">Direktorat Kepesantrenan</option>
-          <option value="Direktorat Islamisasi dan Ilmu Pengetahuan">Direktorat Islamisasi & Ilmu Pengetahuan</option>
-          <option value="Arsip Dokumentasi">Arsip Dokumentasi</option>
-          <option value="Aqidah dan Filsafat Islam">Aqidah dan Filsafat Islam</option>
-          <option value="Aqidah dan Filsafat Islam S2">Aqidah dan Filsafat Islam S2</option>
-          <option value="Aqidah dan Filsafat Islam S3">Aqidah dan Filsafat Islam S3</option>
-          <option value="Ekonomi Islam">Ekonomi Islam</option>
-          <option value="Farmasi">Farmasi</option>
-          <option value="Gizi">Gizi</option>
-          <option value="Hubungan Internasional">Hubungan Internasional</option>
-          <option value="Hukum Ekonomi Syariah">Hukum Ekonomi Syariah</option>
-          <option value="Hukum Ekonomi Syariah S2">Hukum Ekonomi Syariah S2</option>
-          <option value="Ilmu AlQuran Tafsir">Ilmu AlQuran Tafsir</option>
-          <option value="Ilmu Komunikasi">Ilmu Komunikasi</option>
-          <option value="Kesehatan dan Keselamatan Kerja">Kesehatan & Keselamatan Kerja</option>
-          <option value="Pendidikan Agama Islam">Pendidikan Agama Islam</option>
-          <option value="Pendidikan Bahasa Arab">Pendidikan Bahasa Arab</option>
-          <option value="Pendidikan Bahasa Arab S2">Pendidikan Bahasa Arab S2</option>
-          <option value="Perbandingan Madzhab">Perbandingan Madzhab</option>
-          <option value="Program Studi Manajemen">Program Studi Manajemen</option>
-          <option value="Studi Agama Agama">Studi Agama Agama</option>
-          <option value="Tadris Bahasa Inggris">Tadris Bahasa Inggris</option>
-          <option value="Teknik Informatika">Teknik Informatika</option>
-          <option value="Teknologi Industri Pertanian">Teknologi Industri Pertanian</option>
-          <option value="Fakultas Ekonomi Manajemen">Fakultas Ekonomi Manajemen</option>
-          <option value="Fakultas Humaniora">Fakultas Humaniora</option>
-          <option value="Fakultas Ilmu Kesehatan">Fakultas Ilmu Kesehatan</option>
-          <option value="Fakultas Sains dan Teknologi">Fakultas Sains & Teknologi</option>
-          <option value="Fakultas Syariah">Fakultas Syariah</option>
-          <option value="Fakultas Tarbiyah">Fakultas Tarbiyah</option>
-          <option value="Fakultas Ushuluddin">Fakultas Ushuluddin</option>
-          <option value="Program Pascasarjana">Program Pascasarjana</option>
-          <option value="Lainnya">Lainnya</option>
-        </select>
-      </div>
+                <!-- Tujuan Surat -->
+                <div class="form-group">
+                  <label
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--text-secondary);
+                    "
+                    >Tujuan Surat *</label
+                  >
+                  <select id="editTujuan" class="form-control" required>
+                    <option value="">-- Pilih Tujuan --</option>
+                    <option value="Badan Penjamin Mutu">
+                      Badan Penjamin Mutu
+                    </option>
+                    <option value="Biro Sumber Daya Manusia">
+                      Biro Sumber Daya Manusia
+                    </option>
+                    <option value="Sekretaris Rektorat">
+                      Sekretaris Rektorat
+                    </option>
+                    <option
+                      value="UPT Pusat Pengembangan Teknologi Informasi dan Komunikasi"
+                    >
+                      UPT Pusat Pengembangan TIK
+                    </option>
+                    <option value="Yayasan Perguruan Tinggi Darussalam">
+                      Yayasan PT Darussalam
+                    </option>
+                    <option value="Sarana dan Prasarana">
+                      Sarana dan Prasarana
+                    </option>
+                    <option value="Mitra Kerjasama">Mitra Kerjasama</option>
+                    <option value="Pusat Bahasa">Pusat Bahasa</option>
+                    <option value="Biro Administrasi Akademik">
+                      Biro Administrasi Akademik
+                    </option>
+                    <option value="Biro Administrasi Keuangan">
+                      Biro Administrasi Keuangan
+                    </option>
+                    <option value="Biro Kesejahteraan Keluarga">
+                      Biro Kesejahteraan Keluarga
+                    </option>
+                    <option value="Kemendikbudristekdikti">
+                      Kemendikbudristekdikti
+                    </option>
+                    <option value="Direktorat Kepesantrenan">
+                      Direktorat Kepesantrenan
+                    </option>
+                    <option value="Direktorat Islamisasi dan Ilmu Pengetahuan">
+                      Direktorat Islamisasi & Ilmu Pengetahuan
+                    </option>
+                    <option value="Arsip Dokumentasi">Arsip Dokumentasi</option>
+                    <option value="Aqidah dan Filsafat Islam">
+                      Aqidah dan Filsafat Islam
+                    </option>
+                    <option value="Aqidah dan Filsafat Islam S2">
+                      Aqidah dan Filsafat Islam S2
+                    </option>
+                    <option value="Aqidah dan Filsafat Islam S3">
+                      Aqidah dan Filsafat Islam S3
+                    </option>
+                    <option value="Ekonomi Islam">Ekonomi Islam</option>
+                    <option value="Farmasi">Farmasi</option>
+                    <option value="Gizi">Gizi</option>
+                    <option value="Hubungan Internasional">
+                      Hubungan Internasional
+                    </option>
+                    <option value="Hukum Ekonomi Syariah">
+                      Hukum Ekonomi Syariah
+                    </option>
+                    <option value="Hukum Ekonomi Syariah S2">
+                      Hukum Ekonomi Syariah S2
+                    </option>
+                    <option value="Ilmu AlQuran Tafsir">
+                      Ilmu AlQuran Tafsir
+                    </option>
+                    <option value="Ilmu Komunikasi">Ilmu Komunikasi</option>
+                    <option value="Kesehatan dan Keselamatan Kerja">
+                      Kesehatan & Keselamatan Kerja
+                    </option>
+                    <option value="Pendidikan Agama Islam">
+                      Pendidikan Agama Islam
+                    </option>
+                    <option value="Pendidikan Bahasa Arab">
+                      Pendidikan Bahasa Arab
+                    </option>
+                    <option value="Pendidikan Bahasa Arab S2">
+                      Pendidikan Bahasa Arab S2
+                    </option>
+                    <option value="Perbandingan Madzhab">
+                      Perbandingan Madzhab
+                    </option>
+                    <option value="Program Studi Manajemen">
+                      Program Studi Manajemen
+                    </option>
+                    <option value="Studi Agama Agama">Studi Agama Agama</option>
+                    <option value="Tadris Bahasa Inggris">
+                      Tadris Bahasa Inggris
+                    </option>
+                    <option value="Teknik Informatika">
+                      Teknik Informatika
+                    </option>
+                    <option value="Teknologi Industri Pertanian">
+                      Teknologi Industri Pertanian
+                    </option>
+                    <option value="Fakultas Ekonomi Manajemen">
+                      Fakultas Ekonomi Manajemen
+                    </option>
+                    <option value="Fakultas Humaniora">
+                      Fakultas Humaniora
+                    </option>
+                    <option value="Fakultas Ilmu Kesehatan">
+                      Fakultas Ilmu Kesehatan
+                    </option>
+                    <option value="Fakultas Sains dan Teknologi">
+                      Fakultas Sains & Teknologi
+                    </option>
+                    <option value="Fakultas Syariah">Fakultas Syariah</option>
+                    <option value="Fakultas Tarbiyah">Fakultas Tarbiyah</option>
+                    <option value="Fakultas Ushuluddin">
+                      Fakultas Ushuluddin
+                    </option>
+                    <option value="Program Pascasarjana">
+                      Program Pascasarjana
+                    </option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
 
-      <!-- Jenis Naskah Dinas -->
-      <div class="form-group">
-        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary)">Jenis Naskah Dinas *</label>
-        <select id="editJenis" class="form-control" required>
-          <option value="">-- Pilih Jenis --</option>
-          <option value="Instruksi">Instruksi</option>
-          <option value="Surat Edaran">Surat Edaran</option>
-          <option value="Maklumat">Maklumat</option>
-          <option value="Surat Tugas">Surat Tugas</option>
-          <option value="Nota Dinas">Nota Dinas</option>
-          <option value="Disposisi">Disposisi</option>
-          <option value="Surat Dinas">Surat Dinas</option>
-          <option value="Surat Undangan">Surat Undangan</option>
-          <option value="Nota Kesepahaman">Nota Kesepahaman</option>
-          <option value="Surat Perjanjian">Surat Perjanjian</option>
-          <option value="Surat Kuasa/Mandat">Surat Kuasa/Mandat</option>
-          <option value="Surat Pernyataan">Surat Pernyataan</option>
-          <option value="Surat Pengantar">Surat Pengantar</option>
-          <option value="Surat Permohonan">Surat Permohonan</option>
-          <option value="Surat Keterangan">Surat Keterangan</option>
-          <option value="Surat Rekomendasi">Surat Rekomendasi</option>
-          <option value="Berita Acara">Berita Acara</option>
-          <option value="Notula Rapat">Notula Rapat</option>
-          <option value="Sertifikat">Sertifikat</option>
-          <option value="Laporan">Laporan</option>
-          <option value="Telaah Staf">Telaah Staf</option>
-        </select>
-      </div>
+                <!-- Jenis Naskah Dinas -->
+                <div class="form-group">
+                  <label
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--text-secondary);
+                    "
+                    >Jenis Naskah Dinas *</label
+                  >
+                  <select id="editJenis" class="form-control" required>
+                    <option value="">-- Pilih Jenis --</option>
+                    <option value="Instruksi">Instruksi</option>
+                    <option value="Surat Edaran">Surat Edaran</option>
+                    <option value="Maklumat">Maklumat</option>
+                    <option value="Surat Tugas">Surat Tugas</option>
+                    <option value="Nota Dinas">Nota Dinas</option>
+                    <option value="Disposisi">Disposisi</option>
+                    <option value="Surat Dinas">Surat Dinas</option>
+                    <option value="Surat Undangan">Surat Undangan</option>
+                    <option value="Nota Kesepahaman">Nota Kesepahaman</option>
+                    <option value="Surat Perjanjian">Surat Perjanjian</option>
+                    <option value="Surat Kuasa/Mandat">
+                      Surat Kuasa/Mandat
+                    </option>
+                    <option value="Surat Pernyataan">Surat Pernyataan</option>
+                    <option value="Surat Pengantar">Surat Pengantar</option>
+                    <option value="Surat Permohonan">Surat Permohonan</option>
+                    <option value="Surat Keterangan">Surat Keterangan</option>
+                    <option value="Surat Rekomendasi">Surat Rekomendasi</option>
+                    <option value="Berita Acara">Berita Acara</option>
+                    <option value="Notula Rapat">Notula Rapat</option>
+                    <option value="Sertifikat">Sertifikat</option>
+                    <option value="Laporan">Laporan</option>
+                    <option value="Telaah Staf">Telaah Staf</option>
+                  </select>
+                </div>
 
-      <!-- Klasifikasi Arsip -->
-      <div class="form-group">
-        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary)">Klasifikasi Arsip *</label>
-        <select id="editKlas" class="form-control" required>
-          <option value="">-- Pilih Klasifikasi --</option>
-          <option value="Penerimaan Mahasiswa">Penerimaan Mahasiswa</option>
-          <option value="Kurikulum">Kurikulum</option>
-          <option value="Tenaga Pendidik/Dosen">Tenaga Pendidik/Dosen</option>
-          <option value="Kemahasiswaan">Kemahasiswaan</option>
-          <option value="Perkuliahan">Perkuliahan</option>
-          <option value="Data Informasi dan Pengembang Akademik">Data Informasi Akademik</option>
-          <option value="Penunjang Akademik">Penunjang Akademik</option>
-          <option value="Penelitian">Penelitian</option>
-          <option value="Pengabdian kpd Masyarakat">Pengabdian Masyarakat</option>
-          <option value="Publikasi Jurnal/Buku">Publikasi Jurnal/Buku</option>
-          <option value="Wisuda dan Alumni">Wisuda dan Alumni</option>
-          <option value="Penjaminan Mutu">Penjaminan Mutu</option>
-          <option value="Tata Pamong">Tata Pamong</option>
-          <option value="Perencanaan">Perencanaan</option>
-          <option value="Hukum">Hukum</option>
-          <option value="Organisasi dan Ketatalaksanaan">Organisasi</option>
-          <option value="Ketatausahaan">Ketatausahaan</option>
-          <option value="Kerumahtanggaan">Kerumahtanggaan</option>
-          <option value="Perlengkapan">Perlengkapan</option>
-          <option value="Hubungan Masyarakat">Hubungan Masyarakat</option>
-          <option value="Pendidikan dan Pelatihan">Pendidikan & Pelatihan</option>
-          <option value="Teknologi, Informasi dan Komunikasi">Teknologi & Informasi</option>
-          <option value="Pengawasan">Pengawasan</option>
-          <option value="Kepegawaian">Kepegawaian</option>
-          <option value="Keuangan">Keuangan</option>
-          <option value="Badan Usaha/Unit Usaha">Badan Usaha</option>
-        </select>
-      </div>
+                <!-- Klasifikasi Arsip -->
+                <div class="form-group">
+                  <label
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--text-secondary);
+                    "
+                    >Klasifikasi Arsip *</label
+                  >
+                  <select id="editKlas" class="form-control" required>
+                    <option value="">-- Pilih Klasifikasi --</option>
+                    <option value="Penerimaan Mahasiswa">
+                      Penerimaan Mahasiswa
+                    </option>
+                    <option value="Kurikulum">Kurikulum</option>
+                    <option value="Tenaga Pendidik/Dosen">
+                      Tenaga Pendidik/Dosen
+                    </option>
+                    <option value="Kemahasiswaan">Kemahasiswaan</option>
+                    <option value="Perkuliahan">Perkuliahan</option>
+                    <option value="Data Informasi dan Pengembang Akademik">
+                      Data Informasi Akademik
+                    </option>
+                    <option value="Penunjang Akademik">
+                      Penunjang Akademik
+                    </option>
+                    <option value="Penelitian">Penelitian</option>
+                    <option value="Pengabdian kpd Masyarakat">
+                      Pengabdian Masyarakat
+                    </option>
+                    <option value="Publikasi Jurnal/Buku">
+                      Publikasi Jurnal/Buku
+                    </option>
+                    <option value="Wisuda dan Alumni">Wisuda dan Alumni</option>
+                    <option value="Penjaminan Mutu">Penjaminan Mutu</option>
+                    <option value="Tata Pamong">Tata Pamong</option>
+                    <option value="Perencanaan">Perencanaan</option>
+                    <option value="Hukum">Hukum</option>
+                    <option value="Organisasi dan Ketatalaksanaan">
+                      Organisasi
+                    </option>
+                    <option value="Ketatausahaan">Ketatausahaan</option>
+                    <option value="Kerumahtanggaan">Kerumahtanggaan</option>
+                    <option value="Perlengkapan">Perlengkapan</option>
+                    <option value="Hubungan Masyarakat">
+                      Hubungan Masyarakat
+                    </option>
+                    <option value="Pendidikan dan Pelatihan">
+                      Pendidikan & Pelatihan
+                    </option>
+                    <option value="Teknologi, Informasi dan Komunikasi">
+                      Teknologi & Informasi
+                    </option>
+                    <option value="Pengawasan">Pengawasan</option>
+                    <option value="Kepegawaian">Kepegawaian</option>
+                    <option value="Keuangan">Keuangan</option>
+                    <option value="Badan Usaha/Unit Usaha">Badan Usaha</option>
+                  </select>
+                </div>
 
-      <!-- Link Dokumen -->
-      <div class="form-group">
-        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary)">Link Dokumen</label>
-        <input type="url" id="editLink" class="form-control" placeholder="https://drive.google.com/...">
-      </div>
+                <!-- Link Dokumen -->
+                <div class="form-group">
+                  <label
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--text-secondary);
+                    "
+                    >Link Dokumen</label
+                  >
+                  <input
+                    type="url"
+                    id="editLink"
+                    class="form-control"
+                    placeholder="https://drive.google.com/..."
+                  />
+                </div>
 
-      <!-- Keterangan -->
-      <div class="form-group">
-        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary)">Keterangan</label>
-        <textarea id="editKet" class="form-control" rows="3" placeholder="Catatan tambahan..."></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeEditModal()">Batal</button>
-      <button class="btn btn-primary" onclick="saveEditSurat()">💾 Simpan Perubahan</button>
-    </div>
-  </div>
-</div>
+                <!-- Keterangan -->
+                <div class="form-group">
+                  <label
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--text-secondary);
+                    "
+                    >Keterangan</label
+                  >
+                  <textarea
+                    id="editKet"
+                    class="form-control"
+                    rows="3"
+                    placeholder="Catatan tambahan..."
+                  ></textarea>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeEditModal()">
+                  Batal
+                </button>
+                <button class="btn btn-primary" onclick="saveEditSurat()">
+                  💾 Simpan Perubahan
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- ==================== KERJASAMA PAGE ==================== -->
