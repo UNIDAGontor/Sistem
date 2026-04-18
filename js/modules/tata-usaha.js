@@ -7,7 +7,7 @@
 
 // Konfigurasi
 const APPS_SCRIPT_URL_SURAT =
-  "https://script.google.com/macros/s/AKfycbzaeVukY02SSvA4MvbkiMlqLyi2bEYjynMVi3ilYK_ES9x00eKv_xAU-Ftzs0UI9KXc/exec";
+  "https://script.google.com/macros/s/AKfycbzg-YpNbhsjLYcvHWFlayKaTjZKv1PHP25Jjd5jvxpSyZWAVHcOEQ5F9BQoyrH3TdDI/exec";
 let suratData = [];
 let currentPage = 1;
 const rowsPerPage = 10;
