@@ -3,19 +3,24 @@
  * TATA-USAHA.JS - Surat Management Module
  * ========================================
  * Integrated with Google Apps Script Backend
+ * + Enhanced Pagination System
  */
 
-// Konfigurasi
+// ✅ DEBUG: Confirm file is loaded
+console.log("📦 TATA-USAHA.JS LOADED SUCCESSFULLY!");
+console.log("📅 Current time:", new Date().toISOString());
+
+// ==================== KONFIGURASI GLOBAL ====================
 const APPS_SCRIPT_URL_SURAT =
   "https://script.google.com/macros/s/AKfycbzg-YpNbhsjLYcvHWFlayKaTjZKv1PHP25Jjd5jvxpSyZWAVHcOEQ5F9BQoyrH3TdDI/exec";
-let suratData = [];
-let currentPage = 1;
-const rowsPerPage = 10;
-let currentFilter = "semua";
 
-/**
- * Fetch data surat dari Google Apps Script
- */
+let suratData = []; // Data mentah dari server
+let filteredData = []; // Data setelah filter & search
+let currentPage = 1; // Halaman aktif
+let itemsPerPage = 10; // Items per page (bisa diubah user)
+let currentFilter = "semua"; // Filter kategori
+
+// ==================== FETCH DATA ====================
 async function fetchSuratData() {
   try {
     const url = `${APPS_SCRIPT_URL_SURAT}?t=${Date.now()}`;
@@ -25,7 +30,7 @@ async function fetchSuratData() {
 
     const result = await response.json();
 
-    // Handle GViz JSONP format jika digunakan
+    // Handle GViz JSONP format
     if (
       typeof result === "string" &&
       result.includes("google.visualization.Query.setResponse")
@@ -61,13 +66,9 @@ async function fetchSuratData() {
   }
 }
 
-/**
- * Format tanggal dari Google Sheets
- */
+// ==================== UTILITIES ====================
 function formatDateGS(value) {
   if (!value) return "-";
-
-  // Handle Date object string from GViz
   if (typeof value === "string" && value.startsWith("Date(")) {
     const parts = value
       .replace("Date(", "")
@@ -77,10 +78,9 @@ function formatDateGS(value) {
     const y = parseInt(parts[0]),
       mo = parseInt(parts[1]),
       d = parseInt(parts[2]);
-    const h = parts[3] ? parseInt(parts[3]) : 0,
-      min = parts[4] ? parseInt(parts[4]) : 0;
+    const h = parts[3] ? parseInt(parts[3]) : 0;
+    const min = parts[4] ? parseInt(parts[4]) : 0;
     const date = new Date(y, mo, d, h, min);
-
     const bulan = [
       "Jan",
       "Feb",
@@ -97,8 +97,6 @@ function formatDateGS(value) {
     ];
     return `${date.getDate()} ${bulan[date.getMonth()]} ${date.getFullYear()}`;
   }
-
-  // Handle normal date
   try {
     const date = new Date(value);
     if (!isNaN(date)) {
@@ -119,35 +117,38 @@ function formatDateGS(value) {
       return `${date.getDate()} ${bulan[date.getMonth()]} ${date.getFullYear()}`;
     }
   } catch (e) {}
-
   return value;
 }
 
-/**
- * Render tabel surat dengan pagination
- */
-function renderSuratTable(data, page = 1) {
-  const tbody = document.getElementById("suratTableBody");
-  const container = document.getElementById("suratTableContainer");
-  const loading = document.getElementById("suratLoading");
-  const pagination = document.getElementById("suratPagination");
+function showToast(type, title, message) {
+  // Fallback jika showToast global tidak tersedia
+  if (typeof window.showToast === "function") {
+    window.showToast(type, title, message);
+  } else {
+    console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
+    alert(`${title}\n${message}`);
+  }
+}
 
-  if (!tbody || !container) return;
+// ==================== FILTER & SEARCH ====================
+function applyFilters() {
+  let filtered = [...suratData];
 
-  // Filter data
-  let filtered = data.filter((row) => {
-    if (currentFilter === "semua") return true;
-    const sumber = (row[1] || "").toLowerCase();
-    if (currentFilter === "masuk")
-      return sumber.includes("masuk") || sumber.includes("tata usaha");
-    if (currentFilter === "keluar")
-      return sumber.includes("keluar") || sumber.includes("mitra");
-    if (currentFilter === "disposisi")
-      return (row[4] || "").toLowerCase().includes("disposisi");
-    return true;
-  });
+  // Filter kategori
+  if (currentFilter !== "semua") {
+    filtered = filtered.filter((row) => {
+      const sumber = (row[1] || "").toLowerCase();
+      if (currentFilter === "masuk")
+        return sumber.includes("masuk") || sumber.includes("tata usaha");
+      if (currentFilter === "keluar")
+        return sumber.includes("keluar") || sumber.includes("mitra");
+      if (currentFilter === "disposisi")
+        return (row[4] || "").toLowerCase().includes("disposisi");
+      return true;
+    });
+  }
 
-  // Search filter
+  // Filter search
   const search =
     document.getElementById("searchSurat")?.value?.toLowerCase() || "";
   if (search) {
@@ -156,22 +157,65 @@ function renderSuratTable(data, page = 1) {
     );
   }
 
-  // Reverse untuk tampilkan terbaru di atas
+  // Reverse: terbaru di atas
   filtered.reverse();
+  return filtered;
+}
 
-  if (filtered.length === 0) {
+// ==================== RENDER TABLE ====================
+function renderSuratTable(page = 1) {
+  const tbody = document.getElementById("suratTableBody");
+  const container = document.getElementById("suratTableContainer");
+  const loading = document.getElementById("suratLoading");
+  const pagination = document.getElementById("suratPagination");
+
+  if (!tbody || !container) {
+    console.error("❌ Table body or container not found!");
+    return;
+  }
+
+  // Apply filters & update global filteredData
+  filteredData = applyFilters();
+
+  console.log("📋 Filtered data:", {
+    originalLength: suratData?.length,
+    filteredLength: filteredData.length,
+    currentFilter,
+    searchQuery: document.getElementById("searchSurat")?.value || "(none)",
+  });
+
+  // Empty state
+  if (filteredData.length === 0) {
     container.style.display = "none";
     loading.style.display = "block";
     loading.innerHTML =
       '<i class="fas fa-inbox" style="font-size: 48px; opacity: 0.3;"></i><p style="margin-top: 12px;">Tidak ada data surat</p>';
-    pagination.innerHTML = "";
+    if (pagination) {
+      pagination.style.display = "none";
+      pagination.innerHTML = "";
+    }
     return;
   }
 
-  // Pagination
-  const totalPages = Math.ceil(filtered.length / rowsPerPage);
-  const start = (page - 1) * rowsPerPage;
-  const paged = filtered.slice(start, start + rowsPerPage);
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  // Validate page number
+  if (page > totalPages) page = totalPages;
+  if (page < 1) page = 1;
+  currentPage = page;
+
+  const start = (page - 1) * itemsPerPage;
+  const paged = filteredData.slice(start, start + itemsPerPage);
+
+  console.log("📊 Pagination info:", {
+    totalItems: filteredData.length,
+    totalPages,
+    currentPage: page,
+    itemsPerPage,
+    startIndex: start,
+    endIndex: start + itemsPerPage,
+  });
 
   // Render rows
   tbody.innerHTML = paged
@@ -197,7 +241,7 @@ function renderSuratTable(data, page = 1) {
         <td><span class="status-badge process">${jenis || "-"}</span></td>
         <td>${klas || "-"}</td>
         <td>${link ? `<a href="${link}" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-link"></i></a>` : "-"}</td>
-        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${keterangan || "-"}</td>
+        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${keterangan || "-"}">${keterangan || "-"}</td>
         <td>
           <button class="btn btn-outline btn-sm" onclick="openEditModal('${nomorUrut}')" title="Edit">
             <i class="fas fa-edit"></i>
@@ -214,616 +258,180 @@ function renderSuratTable(data, page = 1) {
   // Show/hide states
   loading.style.display = "none";
   container.style.display = "block";
+  if (pagination) pagination.style.display = "block";
 
-  // Render pagination
-  renderPagination(pagination, page, totalPages);
+  console.log("✅ Table rows rendered:", paged.length);
+
+  // Render enhanced pagination
+  if (pagination) {
+    renderEnhancedPagination(pagination, page, totalPages, filteredData.length);
+    updateShowingInfo(filteredData.length, page, itemsPerPage);
+  }
 }
 
-/**
- * Render pagination controls
- */
-function renderPagination(container, currentPage, totalPages) {
+// ==================== ENHANCED PAGINATION ====================
+function renderEnhancedPagination(
+  container,
+  currentPage,
+  totalPages,
+  totalItems,
+) {
   if (!container) return;
+
+  if (totalPages <= 1) {
+    container.style.display = "none";
+    container.innerHTML = "";
+    return;
+  }
+
+  container.style.display = "block";
+
+  const controls = document.getElementById("paginationControls");
+  if (!controls) return;
 
   let html = "";
 
-  // Prev button
-  html += `<button class="btn btn-outline btn-sm" ${currentPage === 1 ? "disabled" : ""} onclick="changeSuratPage(${currentPage - 1})">« Prev</button>`;
+  // Previous button
+  html += `<button class="page-btn nav-btn ${currentPage === 1 ? "disabled" : ""}" 
+    onclick="goToPage(${currentPage > 1 ? currentPage - 1 : currentPage})" 
+    ${currentPage === 1 ? "disabled" : ""}>
+    <i class="fas fa-chevron-left"></i> <span class="btn-label">Prev</span>
+  </button>`;
 
-  // Page info
-  html += `<span style="font-size: 12px; color: var(--text-muted); padding: 0 8px;">Hal ${currentPage} dari ${totalPages}</span>`;
+  // Page numbers with ellipsis logic
+  const pages = getPageNumbers(currentPage, totalPages);
+  pages.forEach((p) => {
+    if (p === "...") {
+      html += `<span class="page-ellipsis">...</span>`;
+    } else {
+      html += `<button class="page-btn ${p === currentPage ? "active" : ""}" 
+        onclick="goToPage(${p})">${p}</button>`;
+    }
+  });
 
   // Next button
-  html += `<button class="btn btn-outline btn-sm" ${currentPage === totalPages ? "disabled" : ""} onclick="changeSuratPage(${currentPage + 1})">Next »</button>`;
+  html += `<button class="page-btn nav-btn ${currentPage === totalPages ? "disabled" : ""}" 
+    onclick="goToPage(${currentPage < totalPages ? currentPage + 1 : currentPage})" 
+    ${currentPage === totalPages ? "disabled" : ""}>
+    <span class="btn-label">Next</span> <i class="fas fa-chevron-right"></i>
+  </button>`;
 
-  // Page numbers (if not too many)
-  if (totalPages <= 7) {
-    html += '<span style="margin-left: 12px;">';
-    for (let i = 1; i <= totalPages; i++) {
-      html += `<button class="btn btn-sm ${i === currentPage ? "btn-primary" : "btn-outline"}" onclick="changeSuratPage(${i})" style="padding: 4px 10px; margin: 0 2px;">${i}</button>`;
+  controls.innerHTML = html;
+}
+
+function getPageNumbers(current, total) {
+  const pages = [];
+  const delta = 2;
+  const left = current - delta;
+  const right = current + delta + 1;
+
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || (i >= left && i < right)) {
+      pages.push(i);
     }
-    html += "</span>";
   }
 
-  container.innerHTML = html;
+  // Add ellipsis
+  const result = [];
+  for (let i = 0; i < pages.length; i++) {
+    if (i > 0 && pages[i] - pages[i - 1] > 1) {
+      result.push("...");
+    }
+    result.push(pages[i]);
+  }
+  return result;
 }
 
-/**
- * Change page handler
- */
-function changeSuratPage(page) {
-  currentPage = Math.max(
-    1,
-    Math.min(page, Math.ceil(suratData.length / rowsPerPage)),
-  );
-  renderSuratTable(suratData, currentPage);
+function updateShowingInfo(totalItems, currentPage, itemsPerPage) {
+  const showingInfo = document.getElementById("showingInfo");
+  if (!showingInfo) return;
+
+  const start = (currentPage - 1) * itemsPerPage + 1;
+  const end = Math.min(currentPage * itemsPerPage, totalItems);
+
+  showingInfo.innerHTML = `Menampilkan <strong>${start}-${end}</strong> dari <strong>${totalItems}</strong> surat`;
 }
 
-/**
- * Search handler
- */
+// ==================== NAVIGATION ====================
+function goToPage(page) {
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  if (page < 1 || page > totalPages) return;
+
+  currentPage = page;
+  renderSuratTable(currentPage);
+
+  // Smooth scroll to table
+  const tableContainer = document.getElementById("suratTableContainer");
+  if (tableContainer) {
+    tableContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function jumpToPage() {
+  const input = document.getElementById("jumpPageInput");
+  if (!input) return;
+
+  const page = parseInt(input.value);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  if (page >= 1 && page <= totalPages) {
+    goToPage(page);
+    input.blur(); // Hide keyboard on mobile
+  } else {
+    input.value = currentPage;
+    showToast("info", "Informasi", "Halaman tidak valid");
+  }
+}
+
+function setupPaginationEvents() {
+  // Jump to page: Enter key
+  const jumpInput = document.getElementById("jumpPageInput");
+  if (jumpInput) {
+    jumpInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") jumpToPage();
+    });
+  }
+
+  // Per page selector
+  const perPageSelect = document.getElementById("perPageSelect");
+  if (perPageSelect) {
+    perPageSelect.addEventListener("change", function () {
+      itemsPerPage = parseInt(this.value);
+      currentPage = 1;
+      // Update select value in localStorage for persistence
+      localStorage.setItem("suratItemsPerPage", itemsPerPage);
+      renderSuratTable(currentPage);
+    });
+
+    // Load saved preference
+    const saved = localStorage.getItem("suratItemsPerPage");
+    if (saved) {
+      perPageSelect.value = saved;
+      itemsPerPage = parseInt(saved);
+    }
+  }
+}
+
+// ==================== SEARCH & FILTER HANDLERS ====================
 function searchSuratTable() {
   currentPage = 1;
-  renderSuratTable(suratData, currentPage);
+  renderSuratTable(currentPage);
 }
 
-/**
- * Preview nomor surat
- */
-async function previewNomorSurat() {
-  const jenis = document.getElementById("jenisNaskah")?.value;
-  const klas = document.getElementById("klasArsip")?.value;
-  const jumlah = parseInt(document.getElementById("jumlahSurat")?.value) || 1;
-
-  if (!jenis || !klas) {
-    if (typeof window.showToast === "function") {
-      window.showToast(
-        "warning",
-        "Peringatan",
-        "Jenis Naskah dan Klasifikasi Arsip wajib dipilih!",
-      );
-    }
-    return;
-  }
-
-  const previewBox = document.getElementById("previewBox");
-  previewBox.style.display = "block";
-  previewBox.innerHTML =
-    '<i class="fas fa-spinner fa-spin"></i> Memuat preview...';
-
-  try {
-    // Call Apps Script
-    const result = await googleScriptCall("previewMultiNomor", [
-      jenis,
-      klas,
-      jumlah,
-    ]);
-
-    if (Array.isArray(result) && result.length > 0) {
-      previewBox.innerHTML = `
-        <strong>📋 Preview ${result.length} Nomor Surat:</strong><br><br>
-        ${result.map((n, i) => `<div style="padding: 4px 0;">${i + 1}. ${n}</div>`).join("")}
-      `;
-    } else {
-      previewBox.innerHTML = "⚠️ Tidak ada nomor yang dihasilkan";
-    }
-  } catch (error) {
-    console.error("Preview error:", error);
-    previewBox.innerHTML = "❌ Gagal memuat preview";
-  }
+function setFilter(filter) {
+  currentFilter = filter;
+  currentPage = 1;
+  // Update active state on filter buttons if they exist
+  document.querySelectorAll("[data-filter]").forEach((btn) => {
+    btn.classList.remove("active");
+    if (btn.dataset.filter === filter) btn.classList.add("active");
+  });
+  renderSuratTable(currentPage);
 }
 
-/**
- * Submit surat baru
- */
-async function submitSurat() {
-  const form = {
-    sumber: document.getElementById("sumber")?.value,
-    tujuan: document.getElementById("tujuan")?.value,
-    jenisNaskah: document.getElementById("jenisNaskah")?.value,
-    klasArsip: document.getElementById("klasArsip")?.value,
-    deliverableLink: document.getElementById("deliverableLink")?.value,
-    keterangan: document.getElementById("keterangan")?.value,
-    jumlahSurat: parseInt(document.getElementById("jumlahSurat")?.value) || 1,
-  };
-
-  // Validasi
-  if (!form.sumber || !form.tujuan || !form.jenisNaskah || !form.klasArsip) {
-    if (typeof window.showToast === "function") {
-      window.showToast(
-        "warning",
-        "Peringatan",
-        "Semua field bertanda * wajib diisi!",
-      );
-    }
-    return;
-  }
-
-  // Loading state
-  const submitBtn = document.querySelector("#formSurat .btn-primary");
-  const originalText = submitBtn.innerHTML;
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-
-  try {
-    // Call Apps Script
-    const results = await googleScriptCall("submitMultiSurat", [form]);
-
-    if (Array.isArray(results) && results.length > 0) {
-      if (typeof window.showToast === "function") {
-        window.showToast(
-          "success",
-          "Berhasil",
-          `${results.length} surat berhasil disimpan!`,
-        );
-      }
-
-      // Reset form & reload data
-      resetFormSurat();
-      await loadSuratData();
-    }
-  } catch (error) {
-    console.error("Submit error:", error);
-    if (typeof window.showToast === "function") {
-      window.showToast(
-        "error",
-        "Gagal",
-        "Gagal menyimpan surat: " + error.message,
-      );
-    }
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = originalText;
-  }
-}
-
-/**
- * Reset form
- */
-function resetFormSurat() {
-  document.getElementById("formSurat")?.reset();
-  document.getElementById("previewBox").style.display = "none";
-}
-
-/**
- * Load data surat + render stats
- */
-async function loadSuratData() {
-  const loading = document.getElementById("suratLoading");
-  if (loading) {
-    loading.style.display = "block";
-    loading.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat data...';
-  }
-
-  try {
-    suratData = await fetchSuratData();
-
-    // ✅ Load stats setelah data tersedia
-    const counts = countSuratPerSumber(suratData);
-    renderSuratStats(counts);
-
-    // Render table
-    currentPage = 1;
-    renderSuratTable(suratData, currentPage);
-  } catch (error) {
-    console.error("❌ Error loading data:", error);
-    if (loading) {
-      loading.innerHTML =
-        '<i class="fas fa-exclamation-circle"></i><p>Gagal memuat data</p>';
-    }
-  }
-}
-/**
- * Open modal Buat Nomor Surat
- */
-function openNomorSuratModal() {
-  const modal = document.getElementById("modalNomorSurat");
-  if (modal) {
-    modal.style.display = "flex";
-
-    // Reset form
-    document.getElementById("modalJenisNaskah").value = "";
-    document.getElementById("modalKlasArsip").value = "";
-    document.getElementById("modalJumlah").value = "1";
-    document.getElementById("modalPreviewBox").style.display = "none";
-    document.getElementById("modalPreviewBox").innerHTML = "";
-  }
-}
-
-/**
- * Close modal Buat Nomor Surat
- */
-function closeNomorSuratModal() {
-  const modal = document.getElementById("modalNomorSurat");
-  if (modal) {
-    modal.style.display = "none";
-  }
-}
-
-/**
- * Preview nomor surat di modal
- */
-async function previewNomorSuratModal() {
-  const jenis = document.getElementById("modalJenisNaskah")?.value;
-  const klas = document.getElementById("modalKlasArsip")?.value;
-  const jumlah = parseInt(document.getElementById("modalJumlah")?.value) || 1;
-  const previewBox = document.getElementById("modalPreviewBox");
-
-  if (!jenis || !klas) {
-    previewBox.style.display = "block";
-    previewBox.innerHTML =
-      '<i class="fas fa-info-circle"></i> Pilih Jenis Naskah dan Klasifikasi Arsip untuk preview';
-    previewBox.style.color = "var(--text-muted)";
-    return;
-  }
-
-  previewBox.style.display = "block";
-  previewBox.innerHTML =
-    '<i class="fas fa-spinner fa-spin"></i> Memuat preview...';
-  previewBox.style.color = "var(--text-secondary)";
-
-  try {
-    const result = await googleScriptCall("previewMultiNomor", [
-      jenis,
-      klas,
-      jumlah,
-    ]);
-
-    if (Array.isArray(result) && result.length > 0) {
-      previewBox.innerHTML = `
-        <div style="font-weight: 600; margin-bottom: 8px; color: var(--success);">
-          ✅ Preview ${result.length} Nomor Surat:
-        </div>
-        <div style="font-family: monospace; font-size: 11px; line-height: 1.6;">
-          ${result
-            .map(
-              (n, i) =>
-                `<div style="padding: 4px 0; border-bottom: 1px dashed var(--border);">
-              ${i + 1}. ${n}
-            </div>`,
-            )
-            .join("")}
-        </div>
-      `;
-      previewBox.style.color = "var(--text-primary)";
-
-      // Simpan hasil preview untuk fungsi copy
-      window.lastPreviewNumbers = result;
-    } else {
-      previewBox.innerHTML = "⚠️ Tidak ada nomor yang dihasilkan";
-      previewBox.style.color = "var(--warning)";
-    }
-  } catch (error) {
-    console.error("Preview error:", error);
-    previewBox.innerHTML =
-      "❌ Gagal memuat preview. Pastikan Apps Script terkoneksi.";
-    previewBox.style.color = "var(--accent)";
-  }
-}
-/**
- * Simpan surat dari modal Buat Nomor Surat
- */
-async function saveNomorSuratModal() {
-  // Collect data dari form modal
-  const form = {
-    sumber: document.getElementById("modalSumber")?.value?.trim(),
-    tujuan: document.getElementById("modalTujuan")?.value?.trim(),
-    jenisNaskah: document.getElementById("modalJenisNaskah")?.value?.trim(),
-    klasArsip: document.getElementById("modalKlasArsip")?.value?.trim(),
-    deliverableLink: document
-      .getElementById("modalDeliverableLink")
-      ?.value?.trim(),
-    keterangan: document.getElementById("modalKeterangan")?.value?.trim(),
-    jumlahSurat:
-      parseInt(document.getElementById("modalJumlahSurat")?.value) || 1,
-  };
-
-  console.log("💾 Saving from modal:", form);
-
-  // Validasi field wajib
-  if (!form.sumber || !form.tujuan || !form.jenisNaskah || !form.klasArsip) {
-    if (typeof window.showToast === "function") {
-      window.showToast(
-        "warning",
-        "Peringatan",
-        "Semua field bertanda * wajib diisi!",
-      );
-    } else {
-      alert("Semua field bertanda * wajib diisi!");
-    }
-    return;
-  }
-
-  // Loading state pada tombol Simpan
-  const saveBtn = document.querySelector("#formModalNomor .btn-primary");
-  const originalText = saveBtn?.innerHTML;
-  if (saveBtn) {
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-  }
-
-  try {
-    // Call Apps Script untuk submit
-    const results = await googleScriptCall("submitMultiSurat", [form]);
-
-    if (Array.isArray(results) && results.length > 0) {
-      if (typeof window.showToast === "function") {
-        window.showToast(
-          "success",
-          "Berhasil",
-          `${results.length} surat berhasil disimpan!`,
-        );
-      } else {
-        alert(
-          `${results.length} surat berhasil disimpan!\n\nNomor:\n${results.join("\n")}`,
-        );
-      }
-
-      // Reset form & close modal & refresh table
-      resetModalNomorSurat();
-      closeBuatNomorModal();
-      await loadSuratData(); // Refresh tabel riwayat
-    }
-  } catch (error) {
-    console.error("Submit modal error:", error);
-    if (typeof window.showToast === "function") {
-      window.showToast(
-        "error",
-        "Gagal",
-        "Gagal menyimpan surat: " + error.message,
-      );
-    } else {
-      alert("Gagal menyimpan: " + error.message);
-    }
-  } finally {
-    // Restore tombol
-    if (saveBtn) {
-      saveBtn.disabled = false;
-      saveBtn.innerHTML = originalText || '<i class="fas fa-save"></i> Simpan';
-    }
-  }
-}
-/**
- * Generate dan copy nomor surat ke clipboard
- */
-function generateAndCopyNomorSurat() {
-  const numbers = window.lastPreviewNumbers;
-
-  if (!numbers || numbers.length === 0) {
-    alert("Silakan preview nomor surat terlebih dahulu");
-    previewNomorSuratModal();
-    return;
-  }
-
-  // Format untuk copy
-  const textToCopy = numbers.join("\n");
-
-  // Copy to clipboard
-  navigator.clipboard
-    .writeText(textToCopy)
-    .then(() => {
-      if (typeof window.showToast === "function") {
-        window.showToast(
-          "success",
-          "Berhasil",
-          `${numbers.length} nomor surat disalin ke clipboard!`,
-        );
-      } else {
-        alert(`✅ ${numbers.length} nomor surat disalin:\n\n${textToCopy}`);
-      }
-      closeNomorSuratModal();
-    })
-    .catch((err) => {
-      console.error("Copy failed:", err);
-      alert("Gagal menyalin. Silakan copy manual:\n\n" + textToCopy);
-    });
-}
-
-/**
- * Close modal when clicking outside
- */
-document.addEventListener("click", function (e) {
-  const modal = document.getElementById("modalNomorSurat");
-  if (modal && e.target === modal) {
-    closeNomorSuratModal();
-  }
-});
-/**
- * Open edit modal - dengan handling select elements yang benar
- */
-async function openEditModal(nomorUrut) {
-  console.log("✏️ Opening edit modal for:", nomorUrut);
-
-  try {
-    const data = await googleScriptCall("getSuratById", [nomorUrut]);
-    console.log("📦 Data received:", data);
-
-    if (!data) {
-      console.error("❌ No data found");
-      alert("Data surat tidak ditemukan");
-      return;
-    }
-
-    // ✅ Helper function untuk set value (handle select & input)
-    function setFieldValue(id, value, isSelect = false) {
-      const el = document.getElementById(id);
-      if (!el) {
-        console.warn(`⚠️ Element ${id} not found`);
-        return false;
-      }
-
-      if (isSelect) {
-        // Untuk select: cek apakah value ada di options
-        const options = Array.from(el.options).map((opt) => opt.value);
-        if (options.includes(value)) {
-          el.value = value;
-          console.log(`✅ Set ${id} (select) = "${value}"`);
-          return true;
-        } else {
-          // Jika value tidak ada, set ke option pertama atau "Lainnya"
-          const fallback = options.includes("Lainnya") ? "Lainnya" : options[0];
-          el.value = fallback;
-          console.warn(
-            `⚠️ Value "${value}" not in ${id} options, set to "${fallback}"`,
-          );
-          return false;
-        }
-      } else {
-        // Untuk input/textarea
-        el.value = value || "";
-        console.log(`✅ Set ${id} (input) = "${value}"`);
-        return true;
-      }
-    }
-
-    // ✅ Set semua field dengan mapping yang benar
-    setFieldValue("editNomorUrut", data.nomorUrut || "", false);
-    setFieldValue("editSumber", data.sumber || "", true); // ✅ Select
-    setFieldValue("editTujuan", data.tujuan || "", true); // ✅ Select
-    setFieldValue("editJenis", data.jenisNaskah || "", true); // ✅ Select
-    setFieldValue("editKlas", data.klasArsip || "", true); // ✅ Select
-    setFieldValue("editLink", data.link || "", false);
-    setFieldValue("editKet", data.keterangan || "", false);
-
-    // Show modal
-    const modal = document.getElementById("modalEditSurat");
-    if (modal) {
-      modal.style.display = "flex";
-      console.log("✅ Modal displayed");
-    }
-  } catch (error) {
-    console.error("❌ Edit error:", error);
-    alert("Gagal memuat data: " + error.message);
-  }
-}
-
-/**
- * Close edit modal
- */
-function closeEditModal() {
-  document.getElementById("modalEditSurat").style.display = "none";
-}
-
-/**
- * Save edit - pastikan field names match dengan Code.gs
- */
-async function saveEditSurat() {
-  const data = {
-    nomorUrut: document.getElementById("editNomorUrut")?.value?.trim(),
-    sumber: document.getElementById("editSumber")?.value?.trim(),
-    tujuan: document.getElementById("editTujuan")?.value?.trim(),
-    jenisNaskah: document.getElementById("editJenis")?.value?.trim(),
-    klasArsip: document.getElementById("editKlas")?.value?.trim(),
-    deliverableLink: document.getElementById("editLink")?.value?.trim(),
-    keterangan: document.getElementById("editKet")?.value?.trim(),
-  };
-
-  console.log("💾 Saving:", data);
-
-  if (!data.nomorUrut) {
-    alert("Nomor Urut tidak valid");
-    return;
-  }
-
-  try {
-    const result = await googleScriptCall("updateSurat", [data]);
-    console.log("📦 Update result:", result);
-
-    if (result === "UPDATED") {
-      alert("Data berhasil diperbarui");
-      closeEditModal();
-      await loadSuratData(); // Refresh table
-    } else {
-      throw new Error("Update failed: " + result);
-    }
-  } catch (error) {
-    console.error("❌ Update error:", error);
-    alert("Gagal memperbarui: " + error.message);
-  }
-}
-
-/**
- * Delete surat
- */
-async function deleteSurat(nomorUrut) {
-  if (!confirm("Yakin ingin menghapus surat ini?")) return;
-
-  try {
-    const result = await googleScriptCall("deleteSurat", [nomorUrut]);
-
-    if (result === "OK") {
-      if (typeof window.showToast === "function") {
-        window.showToast("success", "Berhasil", "Surat berhasil dihapus");
-      }
-      await loadSuratData();
-    }
-  } catch (error) {
-    console.error("Delete error:", error);
-    if (typeof window.showToast === "function") {
-      window.showToast("error", "Gagal", "Gagal menghapus surat");
-    }
-  }
-}
-
-/**
- * Export table to CSV
- */
-function exportTable(type) {
-  if (!suratData || suratData.length === 0) {
-    if (typeof window.showToast === "function") {
-      window.showToast(
-        "warning",
-        "Peringatan",
-        "Tidak ada data untuk diexport",
-      );
-    }
-    return;
-  }
-
-  // Headers
-  const headers = [
-    "Tanggal",
-    "Sumber",
-    "Nomor Surat",
-    "Tujuan",
-    "Jenis Naskah",
-    "Klasifikasi Arsip",
-    "Link",
-    "Keterangan",
-    "Nomor Urut",
-  ];
-
-  // Convert to CSV
-  const csv = [
-    headers.join(","),
-    ...suratData.map((row) =>
-      row
-        .map((cell) => {
-          const val = cell?.toString() || "";
-          // Escape commas and quotes
-          return `"${val.replace(/"/g, '""')}"`;
-        })
-        .join(","),
-    ),
-  ].join("\n");
-
-  // Download
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `DataSurat_${new Date().toISOString().slice(0, 10)}.csv`;
-  link.click();
-
-  if (typeof window.showToast === "function") {
-    window.showToast("success", "Export", "Data berhasil diexport");
-  }
-}
-
-/**
- * Helper: Call Google Apps Script function dengan fallback
- */
+// ==================== GOOGLE APPS SCRIPT CALLER ====================
 async function googleScriptCall(functionName, args) {
-  // Coba method 1: GET request
+  // Try method 1: GET request
   try {
     const url = `${APPS_SCRIPT_URL_SURAT}?func=${encodeURIComponent(functionName)}&args=${encodeURIComponent(JSON.stringify(args))}&t=${Date.now()}`;
     const response = await fetch(url);
@@ -848,12 +456,16 @@ async function googleScriptCall(functionName, args) {
     return dummy;
   }
 
-  if (functionName === "submitMultiSurat") {
-    return [`DRAFT/${Date.now()}`];
+  if (functionName === "submitMultiSurat" || functionName === "updateSurat") {
+    return ["DRAFT/" + Date.now()];
   }
 
   if (functionName === "getAllSurat" || functionName === undefined) {
     return [];
+  }
+
+  if (functionName === "deleteSurat") {
+    return "OK";
   }
 
   throw new Error(
@@ -861,80 +473,188 @@ async function googleScriptCall(functionName, args) {
   );
 }
 
-/**
- * Initialize tata usaha module
- */
-function initTataUsaha() {
-  // Load data on init
-  loadSuratData();
-
-  // Auto-refresh every 5 minutes
-  setInterval(loadSuratData, 5 * 60 * 1000);
-  // ✅ Attach event listener untuk tombol Buat Nomor Surat
-  const btnBuatNomor = document.getElementById("btnBuatNomorSurat");
-  if (btnBuatNomor) {
-    btnBuatNomor.addEventListener("click", openBuatNomorModal);
-  }
-
-  console.log("📁 Tata Usaha module initialized");
-
-  return {
-    refresh: loadSuratData,
-    addSurat: submitSurat,
-    export: exportTable,
+// ==================== FORM: SUBMIT SURAT ====================
+async function submitSurat() {
+  const form = {
+    sumber: document.getElementById("sumber")?.value,
+    tujuan: document.getElementById("tujuan")?.value,
+    jenisNaskah: document.getElementById("jenisNaskah")?.value,
+    klasArsip: document.getElementById("klasArsip")?.value,
+    deliverableLink: document.getElementById("deliverableLink")?.value,
+    keterangan: document.getElementById("keterangan")?.value,
+    jumlahSurat: parseInt(document.getElementById("jumlahSurat")?.value) || 1,
   };
-}
 
-// ========================================
-// GLOBAL EXPOSURE
-// ========================================
-if (typeof window !== "undefined") {
-  window.simpanSurat = submitSurat;
-  window.initTataUsaha = initTataUsaha;
-  window.previewNomorSurat = previewNomorSurat;
-  window.searchSuratTable = searchSuratTable;
-  window.filterSuratTable = filterSuratTable;
-  window.changeSuratPage = changeSuratPage;
-  window.openEditModal = openEditModal;
-  window.closeEditModal = closeEditModal;
-  window.saveEditSurat = saveEditSurat;
-  window.deleteSurat = deleteSurat;
-  window.exportTable = exportTable;
+  // Validasi
+  if (!form.sumber || !form.tujuan || !form.jenisNaskah || !form.klasArsip) {
+    showToast("warning", "Peringatan", "Semua field bertanda * wajib diisi!");
+    return;
+  }
 
-  // ✅ TAMBAHKAN FUNGSI MODAL BUAT NOMOR SURAT
-  window.openBuatNomorModal = openBuatNomorModal;
-  window.closeBuatNomorModal = closeBuatNomorModal;
-  window.previewNomorSuratModal = previewNomorSuratModal;
-  window.copyNomorSuratModal = copyNomorSuratModal;
-  window.resetModalNomorSurat = resetModalNomorSurat;
-  window.saveNomorSuratModal = saveNomorSuratModal;
-}
+  // Loading state
+  const submitBtn = document.querySelector("#formSurat .btn-primary");
+  if (submitBtn) {
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
-// Auto-init when page is ready
-if (typeof document !== "undefined") {
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initTataUsaha);
-  } else {
-    initTataUsaha();
+    try {
+      const results = await googleScriptCall("submitMultiSurat", [form]);
+
+      if (Array.isArray(results) && results.length > 0) {
+        showToast(
+          "success",
+          "Berhasil",
+          `${results.length} surat berhasil disimpan!`,
+        );
+        resetFormSurat();
+        await loadSuratData();
+      }
+    } catch (error) {
+      console.error("Submit error:", error);
+      showToast("error", "Gagal", "Gagal menyimpan surat: " + error.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+    }
   }
 }
-/**
- * Open modal Buat Nomor Surat
- */
+
+function resetFormSurat() {
+  document.getElementById("formSurat")?.reset();
+  const previewBox = document.getElementById("previewBox");
+  if (previewBox) {
+    previewBox.style.display = "none";
+    previewBox.innerHTML = "";
+  }
+}
+
+// ==================== FORM: EDIT SURAT ====================
+async function openEditModal(nomorUrut) {
+  console.log("✏️ Opening edit modal for:", nomorUrut);
+
+  try {
+    const data = await googleScriptCall("getSuratById", [nomorUrut]);
+    console.log("📦 Data received:", data);
+
+    if (!data) {
+      showToast("warning", "Peringatan", "Data surat tidak ditemukan");
+      return;
+    }
+
+    // Helper function untuk set value (handle select & input)
+    function setFieldValue(id, value, isSelect = false) {
+      const el = document.getElementById(id);
+      if (!el) {
+        console.warn(`⚠️ Element ${id} not found`);
+        return false;
+      }
+
+      if (isSelect) {
+        const options = Array.from(el.options).map((opt) => opt.value);
+        if (options.includes(value)) {
+          el.value = value;
+          console.log(`✅ Set ${id} (select) = "${value}"`);
+          return true;
+        } else {
+          const fallback = options.includes("Lainnya") ? "Lainnya" : options[0];
+          el.value = fallback;
+          console.warn(
+            `⚠️ Value "${value}" not in ${id} options, set to "${fallback}"`,
+          );
+          return false;
+        }
+      } else {
+        el.value = value || "";
+        console.log(`✅ Set ${id} (input) = "${value}"`);
+        return true;
+      }
+    }
+
+    // Set semua field
+    setFieldValue("editNomorUrut", data.nomorUrut || "", false);
+    setFieldValue("editSumber", data.sumber || "", true);
+    setFieldValue("editTujuan", data.tujuan || "", true);
+    setFieldValue("editJenis", data.jenisNaskah || "", true);
+    setFieldValue("editKlas", data.klasArsip || "", true);
+    setFieldValue("editLink", data.link || "", false);
+    setFieldValue("editKet", data.keterangan || "", false);
+
+    // Show modal
+    const modal = document.getElementById("modalEditSurat");
+    if (modal) modal.style.display = "flex";
+  } catch (error) {
+    console.error("❌ Edit error:", error);
+    showToast("error", "Gagal", "Gagal memuat data: " + error.message);
+  }
+}
+
+function closeEditModal() {
+  const modal = document.getElementById("modalEditSurat");
+  if (modal) modal.style.display = "none";
+}
+
+async function saveEditSurat() {
+  const data = {
+    nomorUrut: document.getElementById("editNomorUrut")?.value?.trim(),
+    sumber: document.getElementById("editSumber")?.value?.trim(),
+    tujuan: document.getElementById("editTujuan")?.value?.trim(),
+    jenisNaskah: document.getElementById("editJenis")?.value?.trim(),
+    klasArsip: document.getElementById("editKlas")?.value?.trim(),
+    deliverableLink: document.getElementById("editLink")?.value?.trim(),
+    keterangan: document.getElementById("editKet")?.value?.trim(),
+  };
+
+  console.log("💾 Saving:", data);
+
+  if (!data.nomorUrut) {
+    showToast("warning", "Peringatan", "Nomor Urut tidak valid");
+    return;
+  }
+
+  try {
+    const result = await googleScriptCall("updateSurat", [data]);
+    console.log("📦 Update result:", result);
+
+    if (result === "UPDATED" || result?.success) {
+      showToast("success", "Berhasil", "Data berhasil diperbarui");
+      closeEditModal();
+      await loadSuratData();
+    } else {
+      throw new Error("Update failed: " + result);
+    }
+  } catch (error) {
+    console.error("❌ Update error:", error);
+    showToast("error", "Gagal", "Gagal memperbarui: " + error.message);
+  }
+}
+
+async function deleteSurat(nomorUrut) {
+  if (!confirm("Yakin ingin menghapus surat ini?")) return;
+
+  try {
+    const result = await googleScriptCall("deleteSurat", [nomorUrut]);
+
+    if (result === "OK" || result?.success) {
+      showToast("success", "Berhasil", "Surat berhasil dihapus");
+      await loadSuratData();
+    }
+  } catch (error) {
+    console.error("Delete error:", error);
+    showToast("error", "Gagal", "Gagal menghapus surat");
+  }
+}
+
+// ==================== MODAL: BUAT NOMOR SURAT ====================
 function openBuatNomorModal() {
   const modal = document.getElementById("modalBuatNomor");
   if (modal) {
     modal.classList.add("show");
     modal.style.display = "flex";
-
-    // Reset form modal
     resetModalNomorSurat();
   }
 }
 
-/**
- * Close modal Buat Nomor Surat
- */
 function closeBuatNomorModal() {
   const modal = document.getElementById("modalBuatNomor");
   if (modal) {
@@ -943,9 +663,6 @@ function closeBuatNomorModal() {
   }
 }
 
-/**
- * Reset form modal
- */
 function resetModalNomorSurat() {
   document.getElementById("formModalNomor")?.reset();
   const previewBox = document.getElementById("modalPreviewBox");
@@ -953,13 +670,9 @@ function resetModalNomorSurat() {
     previewBox.style.display = "none";
     previewBox.innerHTML = "";
   }
-  // Clear cached preview
   window.modalPreviewNumbers = null;
 }
 
-/**
- * Preview nomor surat di modal
- */
 async function previewNomorSuratModal() {
   const jenis = document.getElementById("modalJenisNaskah")?.value;
   const klas = document.getElementById("modalKlasArsip")?.value;
@@ -967,19 +680,20 @@ async function previewNomorSuratModal() {
     parseInt(document.getElementById("modalJumlahSurat")?.value) || 1;
   const previewBox = document.getElementById("modalPreviewBox");
 
-  // Validasi
   if (!jenis || !klas) {
-    previewBox.style.display = "block";
-    previewBox.innerHTML =
-      '<i class="fas fa-exclamation-circle" style="color: var(--warning);"></i> Pilih Jenis Naskah dan Klasifikasi Arsip untuk preview';
-    previewBox.style.color = "var(--text-muted)";
+    if (previewBox) {
+      previewBox.style.display = "block";
+      previewBox.innerHTML =
+        '<i class="fas fa-exclamation-circle" style="color: var(--warning);"></i> Pilih Jenis Naskah dan Klasifikasi Arsip untuk preview';
+    }
     return;
   }
 
-  previewBox.style.display = "block";
-  previewBox.innerHTML =
-    '<i class="fas fa-spinner fa-spin"></i> Memuat preview...';
-  previewBox.style.color = "var(--text-secondary)";
+  if (previewBox) {
+    previewBox.style.display = "block";
+    previewBox.innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> Memuat preview...';
+  }
 
   try {
     const result = await googleScriptCall("previewMultiNomor", [
@@ -989,85 +703,76 @@ async function previewNomorSuratModal() {
     ]);
 
     if (Array.isArray(result) && result.length > 0) {
-      // Cache untuk fungsi copy
       window.modalPreviewNumbers = result;
 
-      previewBox.innerHTML = `
-        <div style="font-weight: 600; margin-bottom: 8px; color: var(--success);">
-          ✅ Preview ${result.length} Nomor Surat:
-        </div>
-        <div style="font-family: monospace; font-size: 11px; line-height: 1.6; background: white; padding: 10px; border-radius: 6px;">
-          ${result
-            .map(
-              (n, i) =>
-                `<div style="padding: 4px 0; border-bottom: ${i < result.length - 1 ? "1px dashed var(--border)" : "none"};">
-              <span style="color: var(--text-muted); margin-right: 8px;">${i + 1}.</span>
-              <strong>${n}</strong>
-            </div>`,
-            )
-            .join("")}
-        </div>
-        <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
-          <i class="fas fa-info-circle"></i> Klik "Salin Nomor" untuk copy ke clipboard
-        </div>
-      `;
-      previewBox.style.color = "var(--text-primary)";
+      if (previewBox) {
+        previewBox.innerHTML = `
+          <div style="font-weight: 600; margin-bottom: 8px; color: var(--success);">
+            ✅ Preview ${result.length} Nomor Surat:
+          </div>
+          <div style="font-family: monospace; font-size: 11px; line-height: 1.6; background: white; padding: 10px; border-radius: 6px;">
+            ${result
+              .map(
+                (n, i) =>
+                  `<div style="padding: 4px 0; border-bottom: ${i < result.length - 1 ? "1px dashed var(--border)" : "none"};">
+                <span style="color: var(--text-muted); margin-right: 8px;">${i + 1}.</span>
+                <strong>${n}</strong>
+              </div>`,
+              )
+              .join("")}
+          </div>
+          <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
+            <i class="fas fa-info-circle"></i> Klik "Salin Nomor" untuk copy ke clipboard
+          </div>
+        `;
+      }
     } else {
-      previewBox.innerHTML = "⚠️ Tidak ada nomor yang dihasilkan";
-      previewBox.style.color = "var(--warning)";
+      if (previewBox) {
+        previewBox.innerHTML = "⚠️ Tidak ada nomor yang dihasilkan";
+        previewBox.style.color = "var(--warning)";
+      }
     }
   } catch (error) {
     console.error("Preview error:", error);
-    previewBox.innerHTML =
-      "❌ Gagal memuat preview. Pastikan Apps Script terkoneksi.";
-    previewBox.style.color = "var(--accent)";
+    if (previewBox) {
+      previewBox.innerHTML =
+        "❌ Gagal memuat preview. Pastikan Apps Script terkoneksi.";
+      previewBox.style.color = "var(--accent)";
+    }
   }
 }
 
-/**
- * Copy nomor surat ke clipboard dari modal
- */
 function copyNomorSuratModal() {
   const numbers = window.modalPreviewNumbers;
 
   if (!numbers || numbers.length === 0) {
-    alert("Silakan preview nomor surat terlebih dahulu");
+    showToast(
+      "info",
+      "Informasi",
+      "Silakan preview nomor surat terlebih dahulu",
+    );
     previewNomorSuratModal();
     return;
   }
 
-  // Format untuk copy (satu per baris)
   const textToCopy = numbers.join("\n");
 
-  // Copy to clipboard
   if (navigator.clipboard) {
     navigator.clipboard
       .writeText(textToCopy)
       .then(() => {
-        if (typeof window.showToast === "function") {
-          window.showToast(
-            "success",
-            "Berhasil",
-            `${numbers.length} nomor surat disalin ke clipboard!`,
-          );
-        } else {
-          alert(`✅ ${numbers.length} nomor surat disalin:\n\n${textToCopy}`);
-        }
-        // Auto close modal setelah copy (opsional)
-        // closeBuatNomorModal();
+        showToast(
+          "success",
+          "Berhasil",
+          `${numbers.length} nomor surat disalin ke clipboard!`,
+        );
       })
-      .catch((err) => {
-        console.error("Copy failed:", err);
-        fallbackCopy(textToCopy);
-      });
+      .catch(() => fallbackCopy(textToCopy));
   } else {
     fallbackCopy(textToCopy);
   }
 }
 
-/**
- * Fallback copy untuk browser lama
- */
 function fallbackCopy(text) {
   const textarea = document.createElement("textarea");
   textarea.value = text;
@@ -1078,11 +783,7 @@ function fallbackCopy(text) {
 
   try {
     document.execCommand("copy");
-    if (typeof window.showToast === "function") {
-      window.showToast("success", "Berhasil", "Nomor surat disalin!");
-    } else {
-      alert("✅ Nomor surat disalin ke clipboard");
-    }
+    showToast("success", "Berhasil", "Nomor surat disalin!");
   } catch (err) {
     console.error("Fallback copy failed:", err);
     alert("Gagal menyalin. Silakan copy manual:\n\n" + text);
@@ -1091,28 +792,23 @@ function fallbackCopy(text) {
   document.body.removeChild(textarea);
 }
 
-/**
- * Close modal when clicking outside
- */
+// Close modal when clicking outside
 document.addEventListener("click", function (e) {
   const modal = document.getElementById("modalBuatNomor");
-  if (modal && e.target === modal) {
-    closeBuatNomorModal();
-  }
+  if (modal && e.target === modal) closeBuatNomorModal();
+
+  const editModal = document.getElementById("modalEditSurat");
+  if (editModal && e.target === editModal) closeEditModal();
 });
 
-/**
- * Close modal on Escape key
- */
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") {
     closeBuatNomorModal();
+    closeEditModal();
   }
 });
-/**
- * Hitung jumlah surat per Sumber dari data
- * Kolom "Sumber" ada di index 1 (berdasarkan struktur data)
- */
+
+// ==================== STATS & ANALYTICS ====================
 function countSuratPerSumber(data) {
   if (!Array.isArray(data)) return {};
 
@@ -1125,9 +821,7 @@ function countSuratPerSumber(data) {
   };
 
   data.forEach((row) => {
-    // Kolom Sumber = index 1
     const sumber = row[1]?.toString()?.trim() || "Lainnya";
-
     if (counts.hasOwnProperty(sumber)) {
       counts[sumber]++;
     } else {
@@ -1139,9 +833,6 @@ function countSuratPerSumber(data) {
   return counts;
 }
 
-/**
- * Animasi counting angka untuk stat cards
- */
 function animateStatValue(elementId, targetValue, duration = 800) {
   const element = document.getElementById(elementId);
   if (!element) return;
@@ -1151,7 +842,6 @@ function animateStatValue(elementId, targetValue, duration = 800) {
 
   function step(currentTime) {
     const progress = Math.min((currentTime - startTime) / duration, 1);
-    // Easing function untuk animasi smooth
     const easeOut = 1 - Math.pow(1 - progress, 3);
     const currentValue = Math.floor(
       easeOut * (targetValue - startValue) + startValue,
@@ -1162,7 +852,6 @@ function animateStatValue(elementId, targetValue, duration = 800) {
     if (progress < 1) {
       requestAnimationFrame(step);
     } else {
-      // Ensure final value is exact
       element.textContent = targetValue;
     }
   }
@@ -1170,9 +859,6 @@ function animateStatValue(elementId, targetValue, duration = 800) {
   requestAnimationFrame(step);
 }
 
-/**
- * Render stats ke UI elements
- */
 function renderSuratStats(counts) {
   const mappings = [
     { id: "count-tata-usaha", value: counts["Tata Usaha"] || 0 },
@@ -1188,24 +874,163 @@ function renderSuratStats(counts) {
   console.log("✅ Stats rendered:", counts);
 }
 
-/**
- * Load dan render stats surat per sumber
- */
-async function loadSuratStats() {
+// ==================== EXPORT ====================
+function exportTable(type) {
+  if (!suratData || suratData.length === 0) {
+    showToast("warning", "Peringatan", "Tidak ada data untuk diexport");
+    return;
+  }
+
+  const headers = [
+    "Tanggal",
+    "Sumber",
+    "Nomor Surat",
+    "Tujuan",
+    "Jenis Naskah",
+    "Klasifikasi Arsip",
+    "Link",
+    "Keterangan",
+    "Nomor Urut",
+  ];
+
+  const csv = [
+    headers.join(","),
+    ...suratData.map((row) =>
+      row
+        .map((cell) => {
+          const val = cell?.toString() || "";
+          return `"${val.replace(/"/g, '""')}"`;
+        })
+        .join(","),
+    ),
+  ].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `DataSurat_${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+
+  showToast("success", "Export", "Data berhasil diexport");
+}
+
+// ==================== LOAD & INIT ====================
+async function loadSuratData() {
+  const loading = document.getElementById("suratLoading");
+  if (loading) {
+    loading.style.display = "block";
+    loading.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat data...';
+  }
+
   try {
-    const data = await fetchSuratData();
-    const counts = countSuratPerSumber(data);
+    suratData = await fetchSuratData();
+
+    // Load stats
+    const counts = countSuratPerSumber(suratData);
     renderSuratStats(counts);
-    return counts;
+
+    // Render table
+    currentPage = 1;
+    renderSuratTable(currentPage);
   } catch (error) {
-    console.error("❌ Error loading stats:", error);
-    // Fallback: render 0 untuk semua
-    renderSuratStats({
-      "Tata Usaha": 0,
-      Kerjasama: 0,
-      "Urusan Mahasiswa Internasional": 0,
-      "Mobilitas Internasional": 0,
-    });
-    return null;
+    console.error("❌ Error loading data:", error);
+    if (loading) {
+      loading.innerHTML =
+        '<i class="fas fa-exclamation-circle"></i><p>Gagal memuat data</p>';
+    }
+    showToast("error", "Gagal", "Gagal memuat data surat");
+  }
+}
+
+function initTataUsaha() {
+  console.log("🚀 INIT TATA USAHA CALLED!");
+  console.log("📄 Document readyState:", document.readyState);
+
+  // Check critical elements
+  const required = ["suratLoading", "suratPagination", "suratTableBody"].map(
+    (id) => {
+      const el = document.getElementById(id);
+      if (!el) console.error(`❌ Element #${id} not found!`);
+      return el;
+    },
+  );
+
+  if (required.some((el) => !el)) {
+    console.error("❌ CRITICAL: Some required elements not found!");
+  }
+
+  // Activate page if needed
+  const page = document.getElementById("page-tata-usaha");
+  if (page && !page.classList.contains("active")) {
+    document
+      .querySelectorAll(".page")
+      .forEach((p) => p.classList.remove("active"));
+    page.classList.add("active");
+  }
+
+  // Setup pagination event listeners
+  setupPaginationEvents();
+
+  // Load data
+  loadSuratData();
+
+  // Auto-refresh every 5 minutes
+  setInterval(loadSuratData, 5 * 60 * 1000);
+
+  // Attach event listener untuk tombol Buat Nomor Surat
+  const btnBuatNomor = document.getElementById("btnBuatNomorSurat");
+  if (btnBuatNomor) {
+    btnBuatNomor.addEventListener("click", openBuatNomorModal);
+    console.log("✅ Event listener attached to btnBuatNomorSurat");
+  }
+
+  console.log("📁 Tata Usaha module initialized");
+
+  return {
+    refresh: loadSuratData,
+    addSurat: submitSurat,
+    export: exportTable,
+  };
+}
+
+// ==================== GLOBAL EXPOSURE ====================
+if (typeof window !== "undefined") {
+  // Core functions
+  window.initTataUsaha = initTataUsaha;
+  window.loadSuratData = loadSuratData;
+  window.renderSuratTable = renderSuratTable;
+
+  // Navigation
+  window.goToPage = goToPage;
+  window.jumpToPage = jumpToPage;
+  window.searchSuratTable = searchSuratTable;
+  window.setFilter = setFilter;
+
+  // Form actions
+  window.submitSurat = submitSurat;
+  window.resetFormSurat = resetFormSurat;
+  window.openEditModal = openEditModal;
+  window.closeEditModal = closeEditModal;
+  window.saveEditSurat = saveEditSurat;
+  window.deleteSurat = deleteSurat;
+
+  // Modal: Buat Nomor Surat
+  window.openBuatNomorModal = openBuatNomorModal;
+  window.closeBuatNomorModal = closeBuatNomorModal;
+  window.previewNomorSuratModal = previewNomorSuratModal;
+  window.copyNomorSuratModal = copyNomorSuratModal;
+  window.resetModalNomorSurat = resetModalNomorSurat;
+
+  // Utilities
+  window.exportTable = exportTable;
+  window.showToast = showToast;
+}
+
+// Auto-init when page is ready
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initTataUsaha);
+  } else {
+    initTataUsaha();
   }
 }
