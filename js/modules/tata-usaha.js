@@ -121,11 +121,11 @@ function formatDateGS(value) {
 }
 
 function showToast(type, title, message) {
-  // Fallback jika showToast global tidak tersedia
-  if (typeof window.showToast === "function") {
-    window.showToast(type, title, message);
-  } else {
-    console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
+  // Langsung gunakan console.log dan alert
+  console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
+  
+  // Gunakan alert untuk development
+  if (type === 'error' || type === 'warning') {
     alert(`${title}\n${message}`);
   }
 }
@@ -612,20 +612,77 @@ async function saveEditSurat() {
     return;
   }
 
+  // Tambahkan loading state pada tombol
+  const saveBtn = document.querySelector("#modalEditSurat .btn-primary");
+  const cancelBtn = document.querySelector("#modalEditSurat .btn-outline");
+  let originalText = saveBtn?.innerHTML || "";
+  
+  // Disable semua tombol
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+  }
+  if (cancelBtn) cancelBtn.disabled = true;
+
+  // Buat promise dengan timeout
+  const saveWithTimeout = new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error("Request timeout - server tidak merespon setelah 10 detik"));
+    }, 10000); // 10 detik timeout
+
+    googleScriptCall("updateSurat", [data])
+      .then(result => {
+        clearTimeout(timeoutId);
+        resolve(result);
+      })
+      .catch(err => {
+        clearTimeout(timeoutId);
+        reject(err);
+      });
+  });
+
   try {
-    const result = await googleScriptCall("updateSurat", [data]);
+    console.log("🔄 Memulai request update...");
+    const result = await saveWithTimeout;
     console.log("📦 Update result:", result);
 
-    if (result === "UPDATED" || result?.success) {
+    // Kondisi yang lebih fleksibel untuk mendeteksi sukses
+    const isSuccess = 
+      result === "UPDATED" || 
+      result === "OK" ||
+      result?.success === true ||
+      result?.status === "success" ||
+      (Array.isArray(result) && result.length > 0) ||
+      (typeof result === "string" && result.includes("DRAFT"));
+
+    if (isSuccess) {
+      console.log("✅ Update berhasil, menutup modal...");
       showToast("success", "Berhasil", "Data berhasil diperbarui");
+      
+      // TUTUP MODAL SEBELUM refresh data
       closeEditModal();
+      
+      // Refresh data setelah modal tertutup
       await loadSuratData();
     } else {
-      throw new Error("Update failed: " + result);
+      throw new Error("Update failed: " + JSON.stringify(result));
     }
   } catch (error) {
     console.error("❌ Update error:", error);
     showToast("error", "Gagal", "Gagal memperbarui: " + error.message);
+    
+    // Optional: Tetap tutup modal meskipun error (untuk development)
+    // Uncomment baris berikut jika ingin modal tetap tertutup saat error:
+    // closeEditModal();
+  } finally {
+    // Kembalikan tombol ke state normal
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalText;
+    }
+    if (cancelBtn) cancelBtn.disabled = false;
+    
+    console.log("🔄 Tombol sudah di-reset");
   }
 }
 
