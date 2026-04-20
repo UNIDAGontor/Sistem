@@ -24,10 +24,13 @@ let activitiesLoaded = false;
 /**
  * Fetch data dari Google Apps Script dengan parameter sheet
  */
+/**
+ * Fetch data dari Google Apps Script dengan parameter sheet
+ */
 async function fetchDashboardData(sheetName, baseUrl) {
   try {
     const url = `${baseUrl}?sheet=${encodeURIComponent(sheetName)}&t=${Date.now()}`;
-    console.log(`📡 Fetching ${sheetName} from ${baseUrl.substring(0, 50)}...`);
+    console.log(`📡 Fetching ${sheetName}...`);
 
     const response = await fetch(url);
 
@@ -38,13 +41,45 @@ async function fetchDashboardData(sheetName, baseUrl) {
 
     const result = await response.json();
 
-    if (result?.error) {
-      console.error(`❌ Apps Script error: ${result.error}`);
-      return [];
+    // ✅ TAMBAHKAN INI: Handle GViz JSONP format (seperti di TATA-USAHA.JS)
+    if (
+      typeof result === "string" &&
+      result.includes("google.visualization.Query.setResponse")
+    ) {
+      console.log(`📋 ${sheetName}: Detected GViz format, parsing...`);
+      const match = result.match(
+        /google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/,
+      );
+      if (match) {
+        const json = JSON.parse(match[1]);
+        const rows = json.table?.rows || [];
+        const cols = json.table?.cols?.map((c) => c.label || c.id) || [];
+        
+        console.log(`📋 ${sheetName}: Columns detected:`, cols);
+        
+        const parsedData = rows.map((row) => {
+          const obj = {};
+          row.c?.forEach((cell, i) => {
+            const key = cols[i] || `col${i}`;
+            obj[key] = cell?.v || "";
+          });
+          return obj;
+        });
+        
+        console.log(`✅ ${sheetName}: Parsed ${parsedData.length} records from GViz`);
+        
+        // Debug: log sample data
+        if (parsedData.length > 0) {
+          console.log(`🔍 Sample ${sheetName} data:`, parsedData[0]);
+        }
+        
+        return parsedData;
+      }
     }
 
+    // Handle format existing (result.data atau array langsung)
     if (result?.data && Array.isArray(result.data)) {
-      console.log(`✅ ${sheetName}: ${result.data.length} records`);
+      console.log(`✅ ${sheetName}: ${result.data.length} records (from result.data)`);
       return result.data;
     }
     if (Array.isArray(result)) {
@@ -144,9 +179,11 @@ function generateActivityId(type, item, index) {
 
   return `${type}_${identifier}_${timestamp}`.replace(/\s+/g, "_");
 }
+
+
 /**
  * Parse aktivitas dari sheet DataSurat
- * ✅ Tanpa Timestamp: Ambil 3 records terbaru (baris terakhir) yang Tujuan-nya terisi
+ * ✅ Handle format ARRAY (index-based) dan OBJECT (name-based)
  */
 function parseSuratActivities(data) {
   if (!Array.isArray(data) || data.length === 0) {
@@ -161,78 +198,88 @@ function parseSuratActivities(data) {
     const first = data[0];
     console.log("📋 Sample DataSurat item:", first);
     console.log("🔑 All keys:", Object.keys(first));
-
-    // Cek semua kemungkinan field "Tujuan"
-    const possibleTujuan = {
-      Tujuan: first.Tujuan,
-      tujuan: first.tujuan,
-      "Tujuan Surat": first["Tujuan Surat"],
-      tujuan_surat: first["tujuan_surat"],
-      recipient: first.recipient,
-      Recipient: first.Recipient,
-    };
-    console.log("🎯 Possible 'Tujuan' fields:", possibleTujuan);
+    
+    // Deteksi apakah format array atau object
+    const isArrayFormat = Array.isArray(first) || (first[0] !== undefined);
+    console.log(`📋 Data format: ${isArrayFormat ? 'ARRAY (index-based)' : 'OBJECT (name-based)'}`);
+    
+    if (isArrayFormat) {
+      console.log("📋 Array mapping: [0]=Timestamp, [1]=Sumber, [2]=Nomor Surat, [3]=Tujuan, [4]=Jenis, [5]=Klas, [6]=Link, [7]=Keterangan, [8]=Nomor Urut");
+    }
   }
 
-  // ✅ FILTER: Hanya yang kolom "Tujuan" terisi (dengan semua kemungkinan field name)
-  const withTujuan = data.filter((item) => {
-    const tujuan =
-      item.Tujuan ||
-      item.tujuan ||
-      item["Tujuan Surat"] ||
-      item["tujuan_surat"] ||
-      item.recipient ||
-      item.Recipient ||
-      "";
-
-    const isFilled = tujuan && String(tujuan).trim() !== "";
-
-    // Debug: log item yang lolos/tidak lolos filter
-    if (!isFilled && Math.random() < 0.01) {
-      // Log 1% yang tidak lolos untuk sampling
-      console.log("  ❌ Filtered out - Tujuan empty:", {
-        Tujuan: item.Tujuan,
-        tujuan: item.tujuan,
-      });
+  // ✅ FILTER: Handle kedua format (array dan object)
+  const withSumber = data.filter((item) => {
+    let sumber = "";
+    
+    // Cek apakah format array (index-based)
+    if (Array.isArray(item) || item[1] !== undefined) {
+      // Format array: index 1 = Sumber
+      sumber = item[1] || "";
+    } else {
+      // Format object: cek semua kemungkinan field name
+      sumber =
+        item.Sumber ||
+        item.sumber ||
+        item["Sumber Surat"] ||
+        item["sumber_surat"] ||
+        item.source ||
+        item.Source ||
+        "";
     }
 
-    return isFilled;
+    return sumber && String(sumber).trim() !== "";
   });
 
   console.log(
-    `  - Records with Tujuan filled: ${withTujuan.length} of ${data.length}`,
+    `  - Records with Sumber filled: ${withSumber.length} of ${data.length}`,
   );
 
-  if (withTujuan.length === 0) {
+  if (withSumber.length === 0) {
     console.warn(
-      "⚠️ No surat records with Tujuan filled! Check column name in Google Sheets.",
+      "⚠️ No surat records with Sumber filled! Check column name in Google Sheets.",
     );
     return [];
   }
 
   // ✅ Ambil 3 TERBARU (asumsi: data terbaru ada di baris terakhir)
-  const latest = withTujuan.slice(-3).reverse();
+  const latest = withSumber.slice(-3).reverse();
 
   console.log(`✅ Surat: Showing ${latest.length} latest records`);
 
   // 🔍 DEBUG: Log detail dari 3 terbaru
   latest.forEach((item, i) => {
-    const tujuan = item.Tujuan || item.tujuan || item["Tujuan Surat"] || "";
-    const nomor = item["Nomor Surat"] || item.nomor_surat || "";
-    console.log(`  📄 #${i + 1}: "${tujuan}" - ${nomor}`);
+    let sumber, nomor;
+    
+    if (Array.isArray(item) || item[1] !== undefined) {
+      // Array format
+      sumber = item[1] || "";
+      nomor = item[2] || "";
+    } else {
+      // Object format
+      sumber = item.Sumber || item.sumber || "";
+      nomor = item["Nomor Surat"] || item.nomor_surat || "";
+    }
+    
+    console.log(`  📄 #${i + 1}: "${sumber}" - ${nomor}`);
   });
 
   return latest.map((item, index) => {
-    // ✅ Fallback timestamp dari field yang ada
-    let timestampValue =
-      item.Timestamp ||
-      item.timestamp ||
-      item.Tanggal ||
-      item.tanggal ||
-      item["Date Created"] ||
-      item.date_created ||
-      item.created_at ||
-      new Date();
+    // ✅ Helper untuk ambil value (handle array dan object)
+    const getValue = (arrayIndex, ...objectKeys) => {
+      // Coba format array dulu
+      if (Array.isArray(item) || item[arrayIndex] !== undefined) {
+        return item[arrayIndex] || "";
+      }
+      // Kalau tidak, coba format object
+      for (const key of objectKeys) {
+        if (item[key] !== undefined) return item[key];
+      }
+      return "";
+    };
+
+    // ✅ Fallback timestamp
+    let timestampValue = getValue(0, 'Timestamp', 'timestamp', 'Tanggal', 'tanggal', 'Date Created', 'date_created', 'created_at') || new Date();
 
     const rawDate = new Date(timestampValue);
     if (isNaN(rawDate.getTime())) {
@@ -240,26 +287,15 @@ function parseSuratActivities(data) {
       rawDate = new Date();
     }
 
-    const nomorSurat =
-      item["Nomor Surat"] || item.nomor_surat || item.nomorSurat || "";
-    const perihal =
-      item.Perihal ||
-      item.perihal ||
-      item.Subject ||
-      item.Judul ||
-      "Surat baru";
-    const tujuan =
-      item.Tujuan ||
-      item.tujuan ||
-      item["Tujuan Surat"] ||
-      item["tujuan_surat"] ||
-      "";
+    const nomorSurat = getValue(2, "Nomor Surat", "nomor_surat", "nomorSurat");
+    const perihal = getValue(7, "Perihal", "perihal", "Subject", "Judul", "Keterangan") || "Surat baru";
+    const sumber = getValue(1, "Sumber", "sumber", "Sumber Surat", "sumber_surat");
 
     return {
       id: `surat_${nomorSurat || perihal}_${rawDate.getTime()}_${index}`,
       type: "surat",
       title: `Surat: ${perihal}`,
-      description: nomorSurat ? `${nomorSurat}` : `Tujuan: ${tujuan}`,
+      description: sumber ? `Sumber: ${sumber}` : `Nomor: ${nomorSurat}`,
       timestamp: rawDate.toISOString(),
       timeAgo: timeAgo(rawDate),
       icon: getActivityIcon("surat"),
