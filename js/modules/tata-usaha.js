@@ -719,7 +719,83 @@ function closeBuatNomorModal() {
     modal.style.display = "none";
   }
 }
+/**
+ * Simpan nomor surat yang sudah di-generate ke database
+ */
+async function saveNomorSuratModal() {
+  console.log("💾 Save button clicked!");
+  
+  // Ambil data dari form
+  const form = {
+    sumber: document.getElementById("modalSumber")?.value,
+    tujuan: document.getElementById("modalTujuan")?.value,
+    jenisNaskah: document.getElementById("modalJenisNaskah")?.value,
+    klasArsip: document.getElementById("modalKlasArsip")?.value,
+    deliverableLink: document.getElementById("modalLinkDokumen")?.value,
+    keterangan: document.getElementById("modalKeterangan")?.value,
+    jumlahSurat: parseInt(document.getElementById("modalJumlahSurat")?.value) || 1,
+  };
 
+  console.log("📝 Form data:", form);
+
+  // Validasi
+  if (!form.sumber || !form.tujuan || !form.jenisNaskah || !form.klasArsip) {
+    showToast("warning", "Peringatan", "Semua field bertanda * wajib diisi!");
+    return;
+  }
+
+  // Cek apakah sudah preview
+  const numbers = window.modalPreviewNumbers;
+  if (!numbers || numbers.length === 0) {
+    showToast(
+      "warning",
+      "Peringatan",
+      "Silakan klik 'Preview Nomor' terlebih dahulu untuk generate nomor surat"
+    );
+    // Auto trigger preview
+    await previewNomorSuratModal();
+    return;
+  }
+
+  // Loading state
+  const saveBtn = document.querySelector("#modalBuatNomor .btn-primary");
+  const originalText = saveBtn?.innerHTML || "";
+  
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+  }
+
+  try {
+    // Submit ke Google Apps Script
+    const results = await googleScriptCall("submitMultiSurat", [form]);
+
+    if (Array.isArray(results) && results.length > 0) {
+      showToast(
+        "success",
+        "Berhasil",
+        `${results.length} nomor surat berhasil disimpan!`
+      );
+      
+      // Tutup modal
+      closeBuatNomorModal();
+      
+      // Refresh data table
+      await loadSuratData();
+    } else {
+      throw new Error("Tidak ada nomor yang disimpan");
+    }
+  } catch (error) {
+    console.error("❌ Save error:", error);
+    showToast("error", "Gagal", "Gagal menyimpan: " + error.message);
+  } finally {
+    // Reset button
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalText;
+    }
+  }
+}
 function resetModalNomorSurat() {
   document.getElementById("formModalNomor")?.reset();
   const previewBox = document.getElementById("modalPreviewBox");
