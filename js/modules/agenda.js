@@ -10,7 +10,7 @@
 
   // ===== KONFIGURASI BACKEND =====
   const API_CONFIG = {
-    BASE_URL: 'https://script.google.com/macros/s/AKfycbwP73vflHRqSIayfu_IJxmeoz_DXohP_8G289JgjqV7TaXV8mhKhGXmP4zyz6kcjILi/exec',
+    BASE_URL: 'https://script.google.com/macros/s/AKfycbwpZC0e1BBmcALdkA01yLVWXVF-Pu1_jIfVNotmcOYg9dmmSlwWmXAntPKFpkiM96E5/exec',
     MODULE: 'agenda',
     SHEET_NAME: 'AgendaKegiatan'
   };
