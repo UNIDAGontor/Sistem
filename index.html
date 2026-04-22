@@ -2321,82 +2321,311 @@
           </div>
         </div>
 
-        <!-- ==================== AGENDA PAGE ==================== -->
-        <div class="page" id="page-agenda">
-          <div class="card">
-            <div class="card-header">
-              <h3>Agenda Kegiatan</h3>
-              <button
-                class="btn btn-primary btn-sm"
-                onclick="
-                  showToast(
-                    'success',
-                    'Agenda',
-                    'Fitur tambah agenda akan segera tersedia',
-                  )
-                "
-              >
-                <i class="fas fa-plus"></i> Tambah Agenda
-              </button>
-            </div>
-            <div class="card-body">
-              <div class="timeline">
-                <div class="timeline-item">
-                  <h4>Kunjungan Delegasi KAIST</h4>
-                  <p>
-                    Diskusi kerjasama penelitian dan student exchange program
-                    dengan delegasi dari KAIST, Korea Selatan
-                  </p>
-                  <div class="time">
-                    <i class="fas fa-clock"></i> 15 April 2026, 09:00 - 12:00
-                    WIB
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <h4>Konferensi Pendidikan ASEAN</h4>
-                  <p>
-                    Mewakili institusi dalam konferensi pendidikan tingkat ASEAN
-                    di Bangkok, Thailand
-                  </p>
-                  <div class="time">
-                    <i class="fas fa-clock"></i> 22 April 2026, 08:00 - 17:00
-                    WIB
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <h4>Penandatanganan MoU - TU Munich</h4>
-                  <p>
-                    Penandatanganan MoU kerjasama bidang teknik dan teknologi
-                    dengan Technical University of Munich
-                  </p>
-                  <div class="time">
-                    <i class="fas fa-clock"></i> 05 Mei 2026, 10:00 - 11:30 WIB
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <h4>Faculty Exchange Program - Jepang</h4>
-                  <p>
-                    Program pertukaran dosen dengan Universitas Tokyo selama 1
-                    semester
-                  </p>
-                  <div class="time">
-                    <i class="fas fa-clock"></i> 20 Mei 2026, 08:00 WIB
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <h4>Rapat Koordinasi Kerjasama Internasional</h4>
-                  <p>
-                    Rapat internal membahas evaluasi dan rencana kerjasama
-                    internasional semester depan
-                  </p>
-                  <div class="time">
-                    <i class="fas fa-clock"></i> 28 Mei 2026, 13:00 - 15:00 WIB
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+<!-- ==================== AGENDA PAGE ==================== -->
+<div class="page" id="page-agenda">
+  
+
+  <!-- CALENDAR -->
+  <div class="calendar-base">
+    <div class="left-panel">
+      <div class="hamburger">☰</div>
+      <div class="current-date-big" id="bigDate">27</div>
+      <div class="current-day" id="bigDay">THURSDAY</div>
+
+      <div class="current-events-title">Agenda Hari Ini</div>
+      <ul class="events-list-left" id="eventsListLeft">
+        <li>Loading...</li>
+      </ul>
+      <span class="see-events-link" id="seeEventsLink" onclick="openDetailModal()">Lihat semua agenda →</span>
+
+      <div class="create-event-btn" onclick="openAddModal()">
+        <span>Tambah Agenda</span>
+        <div class="plus-icon">+</div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="nav-row">
+        <button class="nav-btn" id="prevYear">◀</button>
+        <span class="year-display" id="yearDisplay">2026</span>
+        <button class="nav-btn" id="nextYear">▶</button>
+      </div>
+
+      <div class="month-tabs" id="monthTabs"></div>
+
+      <div class="day-headers">
+        <div class="day-header">Min</div>
+        <div class="day-header">Sen</div>
+        <div class="day-header">Sel</div>
+        <div class="day-header">Rab</div>
+        <div class="day-header">Kam</div>
+        <div class="day-header">Jum</div>
+        <div class="day-header">Sab</div>
+      </div>
+
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+  </div>
+
+  <!-- TIMELINE AGENDA -->
+  <div class="agenda-section">
+    <div class="card-header">
+      <h3><i class="fas fa-calendar-alt" style="margin-right:8px;color:#110346"></i>Agenda Kegiatan</h3>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+        <i class="fas fa-plus"></i> Tambah Agenda
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="timeline" id="timelineContainer">
+        <div class="timeline-item">
+          <h4>Kunjungan Delegasi KAIST</h4>
+          <p>Diskusi kerjasama penelitian dan student exchange program dengan delegasi dari KAIST, Korea Selatan</p>
+          <div class="time"><i class="fas fa-clock"></i> 15 April 2026, 09:00 - 12:00 WIB</div>
         </div>
+        <div class="timeline-item">
+          <h4>Konferensi Pendidikan ASEAN</h4>
+          <p>Mewakili institusi dalam konferensi pendidikan tingkat ASEAN di Bangkok, Thailand</p>
+          <div class="time"><i class="fas fa-clock"></i> 22 April 2026, 08:00 - 17:00 WIB</div>
+        </div>
+        <div class="timeline-item">
+          <h4>Penandatanganan MoU - TU Munich</h4>
+          <p>Penandatanganan MoU kerjasama bidang teknik dan teknologi dengan Technical University of Munich</p>
+          <div class="time"><i class="fas fa-clock"></i> 05 Mei 2026, 10:00 - 11:30 WIB</div>
+        </div>
+        <div class="timeline-item">
+          <h4>Faculty Exchange Program - Jepang</h4>
+          <p>Program pertukaran dosen dengan Universitas Tokyo selama 1 semester</p>
+          <div class="time"><i class="fas fa-clock"></i> 20 Mei 2026, 08:00 WIB</div>
+        </div>
+        <div class="timeline-item">
+          <h4>Rapat Koordinasi Kerjasama Internasional</h4>
+          <p>Rapat internal membahas evaluasi dan rencana kerjasama internasional semester depan</p>
+          <div class="time"><i class="fas fa-clock"></i> 28 Mei 2026, 13:00 - 15:00 WIB</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD EVENT MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-box" style="max-width: 550px;">
+    <div class="modal-header" style="border-bottom: 2px solid var(--border); padding-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--success) 0%, #27ae60 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+          <i class="fas fa-calendar-plus" style="font-size: 18px;"></i>
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--text-primary);">Tambah Agenda Baru</h3>
+          <p style="margin: 2px 0 0 0; font-size: 12px; color: var(--text-muted);">Isi detail kegiatan di bawah ini</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeAddModal()" style="width: 32px; height: 32px; border: none; background: var(--bg-main); border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: all 0.2s;">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <form id="eventForm" style="padding: 24px;">
+      <!-- Judul -->
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+          <i class="fas fa-heading" style="margin-right: 6px; color: var(--primary-lighter);"></i>Judul Agenda *
+        </label>
+        <input 
+          type="text" 
+          id="eventTitle" 
+          placeholder="Contoh: Rapat Koordinasi Bulanan" 
+          required
+          style="width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; transition: all 0.2s; background: var(--bg-card);"
+          onfocus="this.style.borderColor='var(--primary-lighter)'; this.style.boxShadow='0 0 0 3px rgba(49,130,206,0.1)'"
+          onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'"
+        >
+      </div>
+
+      <!-- Tanggal & Waktu dalam 1 baris -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+        <div class="form-group">
+          <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+            <i class="fas fa-calendar" style="margin-right: 6px; color: var(--primary-lighter);"></i>Tanggal *
+          </label>
+          <input 
+            type="date" 
+            id="eventDate" 
+            required
+            style="width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; transition: all 0.2s; background: var(--bg-card);"
+            onfocus="this.style.borderColor='var(--primary-lighter)'; this.style.boxShadow='0 0 0 3px rgba(49,130,206,0.1)'"
+            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+            <i class="fas fa-clock" style="margin-right: 6px; color: var(--primary-lighter);"></i>Waktu Mulai *
+          </label>
+          <input 
+            type="time" 
+            id="eventTime" 
+            required
+            style="width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; transition: all 0.2s; background: var(--bg-card);"
+            onfocus="this.style.borderColor='var(--primary-lighter)'; this.style.boxShadow='0 0 0 3px rgba(49,130,206,0.1)'"
+            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'"
+          >
+        </div>
+      </div>
+
+      <!-- Waktu Selesai -->
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+          <i class="fas fa-hourglass-end" style="margin-right: 6px; color: var(--warning);"></i>Waktu Selesai
+          <span style="font-weight: 400; color: var(--text-muted); margin-left: 4px;">(Opsional)</span>
+        </label>
+        <input 
+          type="time" 
+          id="eventTimeEnd"
+          style="width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; transition: all 0.2s; background: var(--bg-card);"
+          onfocus="this.style.borderColor='var(--primary-lighter)'; this.style.boxShadow='0 0 0 3px rgba(49,130,206,0.1)'"
+          onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'"
+        >
+      </div>
+
+      <!-- Kategori -->
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+          <i class="fas fa-tag" style="margin-right: 6px; color: var(--primary-lighter);"></i>Kategori *
+        </label>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <button 
+            type="button" 
+            class="category-option active" 
+            data-cat="personal"
+            onclick="selectCategory(this)"
+            style="padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; background: var(--bg-card); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text-secondary); text-align: left;"
+            onmouseover="if(!this.classList.contains('active')){this.style.borderColor='var(--primary-lighter)'; this.style.background='rgba(49,130,206,0.05)'}"
+            onmouseout="if(!this.classList.contains('active')){this.style.borderColor='var(--border)'; this.style.background='var(--bg-card)'}"
+          >
+            <span style="font-size: 18px;">🏠</span>
+            <span>Pribadi</span>
+          </button>
+          
+          <button 
+            type="button" 
+            class="category-option" 
+            data-cat="work"
+            onclick="selectCategory(this)"
+            style="padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; background: var(--bg-card); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text-secondary); text-align: left;"
+            onmouseover="if(!this.classList.contains('active')){this.style.borderColor='var(--primary-lighter)'; this.style.background='rgba(49,130,206,0.05)'}"
+            onmouseout="if(!this.classList.contains('active')){this.style.borderColor='var(--border)'; this.style.background='var(--bg-card)'}"
+          >
+            <span style="font-size: 18px;">💼</span>
+            <span>Kerja</span>
+          </button>
+          
+          <button 
+            type="button" 
+            class="category-option" 
+            data-cat="school"
+            onclick="selectCategory(this)"
+            style="padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; background: var(--bg-card); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text-secondary); text-align: left;"
+            onmouseover="if(!this.classList.contains('active')){this.style.borderColor='var(--primary-lighter)'; this.style.background='rgba(49,130,206,0.05)'}"
+            onmouseout="if(!this.classList.contains('active')){this.style.borderColor='var(--border)'; this.style.background='var(--bg-card)'}"
+          >
+            <span style="font-size: 18px;">📚</span>
+            <span>Sekolah</span>
+          </button>
+          
+          <button 
+            type="button" 
+            class="category-option" 
+            data-cat="other"
+            onclick="selectCategory(this)"
+            style="padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; background: var(--bg-card); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text-secondary); text-align: left;"
+            onmouseover="if(!this.classList.contains('active')){this.style.borderColor='var(--primary-lighter)'; this.style.background='rgba(49,130,206,0.05)'}"
+            onmouseout="if(!this.classList.contains('active')){this.style.borderColor='var(--border)'; this.style.background='var(--bg-card)'}"
+          >
+            <span style="font-size: 18px;">📌</span>
+            <span>Lainnya</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Deskripsi -->
+      <div class="form-group" style="margin-bottom: 24px;">
+        <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+          <i class="fas fa-align-left" style="margin-right: 6px; color: var(--primary-lighter);"></i>Deskripsi
+          <span style="font-weight: 400; color: var(--text-muted); margin-left: 4px;">(Opsional)</span>
+        </label>
+        <textarea 
+          id="eventDesc" 
+          placeholder="Tambahkan catatan atau detail kegiatan..."
+          rows="3"
+          style="width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; transition: all 0.2s; background: var(--bg-card); resize: vertical;"
+          onfocus="this.style.borderColor='var(--primary-lighter)'; this.style.boxShadow='0 0 0 3px rgba(49,130,206,0.1)'"
+          onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none'"
+        ></textarea>
+      </div>
+      <!-- Tambahkan setelah field Deskripsi -->
+<div class="form-group" style="margin-bottom: 20px;">
+  <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
+    <i class="fas fa-map-marker-alt" style="margin-right: 6px; color: var(--warning);"></i>Lokasi <span style="font-weight:400;color:var(--text-muted)">(Opsional)</span>
+  </label>
+  <input type="text" id="eventLocation" placeholder="Contoh: Ruang Rapat A, Gedung Utama" 
+    style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;">
+</div>
+
+<div class="form-group" style="margin-bottom: 24px;">
+  <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
+    <i class="fas fa-video" style="margin-right: 6px; color: var(--info);"></i>Link Meeting <span style="font-weight:400;color:var(--text-muted)">(Opsional)</span>
+  </label>
+  <input type="url" id="eventMeetingLink" placeholder="https://meet.google.com/xxx-xxxx-xxx" 
+    style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;">
+</div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 12px; padding-top: 20px; border-top: 2px solid var(--border);">
+        <button 
+          type="button" 
+          onclick="closeAddModal()"
+          style="flex: 1; padding: 12px 20px; border: 2px solid var(--border); border-radius: 10px; background: var(--bg-card); font-size: 14px; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;"
+          onmouseover="this.style.borderColor='var(--text-muted)'; this.style.color='var(--text-muted)'"
+          onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-secondary)'"
+        >
+          <i class="fas fa-times" style="margin-right: 6px;"></i>Batal
+        </button>
+        
+        <button 
+          type="submit"
+          style="flex: 2; padding: 12px 20px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--success) 0%, #27ae60 100%); font-size: 14px; font-weight: 600; color: white; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; box-shadow: 0 4px 12px rgba(56,161,105,0.3);"
+          onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(56,161,105,0.4)'"
+          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(56,161,105,0.3)'"
+        >
+          <i class="fas fa-save" style="margin-right: 6px;"></i>Simpan Agenda
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+  <!-- DETAIL EVENTS MODAL -->
+  <div class="detail-modal" id="detailModal">
+    <div class="detail-box">
+      <div class="modal-header">
+        <h3>Agenda</h3>
+        <button class="modal-close" onclick="closeDetailModal()">✕</button>
+      </div>
+      <div class="detail-date-label" id="detailDateLabel">Thursday, 27 April 2026</div>
+      <div id="detailEventsList"></div>
+      <div class="modal-actions" style="margin-top:16px">
+        <button class="btn-save" style="flex:1" onclick="closeDetailModal(); openAddModal();">+ Tambah Agenda</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <button class="reset-btn" onclick="resetData()">🔄 Reset Data</button>
+</div>
 
         <!-- ==================== LAPORAN PAGE ==================== -->
         <div class="page" id="page-laporan">
