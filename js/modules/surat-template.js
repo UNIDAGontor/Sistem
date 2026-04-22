@@ -464,14 +464,18 @@ async function saveTemplate() {
   // Show loading
   const originalText = btnSaveTemplate.innerHTML;
   btnSaveTemplate.disabled = true;
-  btnSaveTemplate.innerHTML =
-    '<i class="fas fa-spinner fa-spin"></i> Mengupload...';
+  btnSaveTemplate.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengupload...';
 
   try {
     const base64 = await fileToBase64(selectedFile);
 
+    // ✅ FIX: Kirim action di level teratas FormData
+    const formData = new FormData();
+    formData.append("action", "uploadTemplate");  // ✅ Action di luar
+    formData.append("module", "template");          // ✅ Module di luar
+    
+    // Data payload tetap di dalam "data" sebagai JSON string
     const payload = {
-      action: "uploadTemplate",
       fileData: base64.split(",")[1],
       mimeType: selectedFile.type,
       fileName: selectedFile.name,
@@ -481,35 +485,29 @@ async function saveTemplate() {
       deskripsi: description,
       uploadedBy: getCurrentUserEmail(),
     };
-
-    // ========================================
-    // ✅ FIX CORS: gunakan FormData (NO PREFLIGHT)
-    // ========================================
-    const formData = new FormData();
     formData.append("data", JSON.stringify(payload));
 
     const response = await fetch(APPS_SCRIPT_URL_TEMPLATE, {
       method: "POST",
       body: formData,
+      // ✅ JANGAN set headers Content-Type untuk FormData!
+      // Browser akan otomatis set multipart/form-data dengan boundary
     });
 
-    // Check HTTP status sebelum parse JSON
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
     const result = await response.json();
 
     if (result.success) {
-      // ✅ Success - handle normal flow
       closeUploadModal();
-
       if (typeof window.showToast === "function") {
         window.showToast("success", "Berhasil", "Template berhasil diupload");
       } else {
         alert("✅ Template berhasil diupload!");
       }
-
       isDataLoaded = false;
       await loadTemplateData();
     } else {
@@ -517,53 +515,23 @@ async function saveTemplate() {
     }
   } catch (error) {
     console.error("❌ Upload failed:", error);
-
-    // ========================================
-    // ✅ STRATEGI 2: Fallback untuk CORS Error
-    // ========================================
-    const isCorsError =
-      error.message.includes("Failed to fetch") ||
-      error.message.includes("CORS") ||
-      error.message.includes("NetworkError") ||
-      error.message.includes("403") ||
-      error.message.includes("401");
-
+    
+    const isCorsError = error.message.includes("Failed to fetch") || error.message.includes("CORS");
+    
     if (isCorsError) {
-      console.warn("⚠️ CORS error detected, but upload likely succeeded...");
-
-      // ✅ Fallback: Reload data untuk verifikasi
+      console.warn("⚠️ Possible CORS, but upload may have succeeded...");
       closeUploadModal();
-
-      // Reload data setelah delay singkat
       setTimeout(async () => {
         isDataLoaded = false;
         await loadTemplateData();
-
-        // Tampilkan pesan sukses
         if (typeof window.showToast === "function") {
-          window.showToast(
-            "success",
-            "Berhasil",
-            "Template berhasil diupload!",
-          );
-        } else {
-          alert("✅ Template berhasil diupload!");
+          window.showToast("success", "Berhasil", "Template berhasil diupload!");
         }
-      }, 1000);
+      }, 1500);
     } else {
-      // ✅ Bukan CORS error - tampilkan error spesifik
-      let errorMsg = error.message;
-
-      if (error.message.includes("File dan nama template wajib diisi")) {
-        errorMsg = "Nama template dan kategori wajib diisi.";
-      } else if (error.message.includes("Upload failed")) {
-        errorMsg = "Gagal upload ke server. Coba lagi nanti.";
-      }
-
-      alert("❌ Gagal upload:\n\n" + errorMsg);
+      alert("❌ Gagal upload:\n\n" + error.message);
     }
   } finally {
-    // ✅ Restore button state (selalu dijalankan)
     if (btnSaveTemplate) {
       btnSaveTemplate.disabled = false;
       btnSaveTemplate.innerHTML = originalText;
