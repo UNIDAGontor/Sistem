@@ -8,7 +8,7 @@
 
 // ✅ KONFIGURASI
 const APPS_SCRIPT_URL_TEMPLATE =
-  "https://script.google.com/macros/s/AKfycbwe-2FOfUnzdyONmZJYabbW1EwEAjZMKIncdqoV8bdBv4WQ-VmQXFgF1VnAiKn8RrzH/exec";
+  "https://script.google.com/macros/s/AKfycbwP73vflHRqSIayfu_IJxmeoz_DXohP_8G289JgjqV7TaXV8mhKhGXmP4zyz6kcjILi/exec";
 
 // Global state
 let templateData = [];
