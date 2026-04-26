@@ -8,7 +8,7 @@
 
 // ✅ KONFIGURASI
 const APPS_SCRIPT_URL_TEMPLATE =
-  "https://script.google.com/macros/s/AKfycbwpZC0e1BBmcALdkA01yLVWXVF-Pu1_jIfVNotmcOYg9dmmSlwWmXAntPKFpkiM96E5/exec";
+  "https://script.google.com/macros/s/AKfycbwKxVbadzU_oQXjt6_Pt9bsJd3I-1GsWaeHPIqeOIWWWSUCj7KAnhZzurlJFAuiYNpZ/exec";
 
 // Global state
 let templateData = [];
@@ -191,14 +191,6 @@ function handleTemplateData(result) {
   isDataLoaded = true;
   renderTemplateTable();
   console.log("✅ Template data loaded successfully (JSONP fallback)");
-}
-function fallbackLoadTemplate() {
-  console.warn("⚠️ Using fallback method...");
-
-  const script = document.createElement("script");
-  script.src = `${APPS_SCRIPT_URL_TEMPLATE}?sheet=TemplateSurat&callback=handleTemplateData`;
-
-  document.body.appendChild(script);
 }
 
 function handleTemplateData(result) {
@@ -436,6 +428,9 @@ function processSelectedFile(file) {
 /**
  * ✅ Save template dengan IMPROVED CORS ERROR HANDLING + FALLBACK WORKAROUND
  */
+/**
+ * ✅ Save template dengan IMPROVED CORS ERROR HANDLING
+ */
 async function saveTemplate() {
   if (!selectedFile) {
     alert("Silakan pilih file terlebih dahulu");
@@ -469,23 +464,27 @@ async function saveTemplate() {
   try {
     const base64 = await fileToBase64(selectedFile);
 
-    // ✅ FIX: Kirim action di level teratas FormData
+    // ✅ FIX: Kirim semua field langsung di FormData (bukan nested JSON)
     const formData = new FormData();
-    formData.append("action", "uploadTemplate");  // ✅ Action di luar
-    formData.append("module", "template");          // ✅ Module di luar
-    
-    // Data payload tetap di dalam "data" sebagai JSON string
-    const payload = {
-      fileData: base64.split(",")[1],
-      mimeType: selectedFile.type,
+    formData.append("action", "uploadTemplate");
+    formData.append("module", "template");
+    formData.append("fileData", base64.split(",")[1]);  // ✅ Langsung kirim base64
+    formData.append("mimeType", selectedFile.type);      // ✅ Langsung kirim
+    formData.append("fileName", selectedFile.name);      // ✅ Langsung kirim
+    formData.append("fileSize", selectedFile.size);      // ✅ Langsung kirim
+    formData.append("nama", name);                       // ✅ Langsung kirim
+    formData.append("kategori", category);               // ✅ Langsung kirim
+    formData.append("deskripsi", description);           // ✅ Langsung kirim
+    formData.append("uploadedBy", getCurrentUserEmail()); // ✅ Langsung kirim
+
+    console.log("📤 Sending FormData with fields:", {
+      action: "uploadTemplate",
+      module: "template",
       fileName: selectedFile.name,
       fileSize: selectedFile.size,
       nama: name,
-      kategori: category,
-      deskripsi: description,
-      uploadedBy: getCurrentUserEmail(),
-    };
-    formData.append("data", JSON.stringify(payload));
+      kategori: category
+    });
 
     const response = await fetch(APPS_SCRIPT_URL_TEMPLATE, {
       method: "POST",
@@ -494,12 +493,15 @@ async function saveTemplate() {
       // Browser akan otomatis set multipart/form-data dengan boundary
     });
 
+    console.log("📥 Response status:", response.status);
+    
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
     const result = await response.json();
+    console.log("📡 Upload response:", result);
 
     if (result.success) {
       closeUploadModal();
@@ -544,166 +546,283 @@ async function saveTemplate() {
 // ========================================
 
 function startEditTemplate(id) {
-  console.log("📝 Edit template:", id);
+  console.log("📝 Edit template called with ID:", id);
+  
+  // Validasi ID
+  if (!id) {
+    console.error("❌ No ID provided");
+    alert("ID template tidak valid");
+    return;
+  }
+  
+  // Cari data template
   const item = templateData.find((t) => t.id === id);
   if (!item) {
-    console.error("Template not found:", id);
+    console.error("❌ Template not found:", id);
     alert("Data template tidak ditemukan");
     return;
   }
 
-  const {
-    editTemplateId,
-    editTemplateName,
-    editTemplateCategory,
-    editTemplateDescription,
-    editTemplateLink,
-    editFileName,
-    editFileSize,
-    templatePreviewSection,
-    pdfPreview,
-  } = DOM;
+  console.log("✅ Template found:", item);
 
-  // Populate form
-  if (editTemplateId) editTemplateId.value = item.id;
-  if (editTemplateName) editTemplateName.value = item.nama;
-  if (editTemplateCategory) editTemplateCategory.value = item.kategori;
-  if (editTemplateDescription)
-    editTemplateDescription.value = item.deskripsi || "";
-  if (editTemplateLink) editTemplateLink.value = item.fileLink || "";
-  if (editFileName) editFileName.textContent = item.fileName || "-";
-  if (editFileSize)
-    editFileSize.textContent = item.fileSize
-      ? `(${formatFileSize(item.fileSize)})`
-      : "";
+  // ✅ Set nilai ke form - pastikan elemen ada
+  const editIdField = document.getElementById("editTemplateId");
+  const editNameField = document.getElementById("editTemplateName");
+  const editCategoryField = document.getElementById("editTemplateCategory");
+  const editDescField = document.getElementById("editTemplateDescription");
+  const editLinkField = document.getElementById("editTemplateLink");
+  const editFileNameField = document.getElementById("editFileName");
+  const editFileSizeField = document.getElementById("editFileSize");
 
-  // ❌ JANGAN auto-load preview di modal edit
-  // Preview hanya untuk tombol "Preview" di tabel
-  if (templatePreviewSection) {
-    templatePreviewSection.style.display = "none";
+  if (!editIdField) {
+    console.error("❌ Input hidden editTemplateId TIDAK DITEMUKAN!");
+    alert("Error: Form tidak lengkap. Refresh halaman atau periksa HTML.");
+    return;
   }
 
-  if (DOM.modalEdit) {
-    DOM.modalEdit.style.display = "flex";
-    console.log("✅ Edit modal opened");
+  // ✅ Isi semua field
+  editIdField.value = item.id;
+  console.log("✅ ID set to:", editIdField.value);
+  
+  if (editNameField) editNameField.value = item.nama || "";
+  if (editCategoryField) editCategoryField.value = item.kategori || "";
+  if (editDescField) editDescField.value = item.deskripsi || "";
+  if (editLinkField) editLinkField.value = item.fileLink || "";
+  if (editFileNameField) editFileNameField.textContent = item.fileName || "-";
+  if (editFileSizeField) {
+    editFileSizeField.textContent = item.fileSize 
+      ? `(${formatFileSize(item.fileSize)})` 
+      : "";
+  }
+
+  // ✅ Tampilkan modal
+  const modal = document.getElementById("modalEditTemplate");
+  if (modal) {
+    modal.style.display = "flex";
+    console.log("✅ Modal opened successfully");
+  } else {
+    console.error("❌ Modal element not found!");
   }
 }
 
 function closeEditTemplateModal() {
-  if (DOM.modalEdit) DOM.modalEdit.style.display = "none";
-  // ✅ Clear preview iframe untuk hemat memori
-  if (DOM.pdfPreview) DOM.pdfPreview.innerHTML = "";
+  console.log("🚪 Closing edit modal");
+  const modal = document.getElementById("modalEditTemplate");
+  if (modal) {
+    modal.style.display = "none";
+  }
+  
+  // Clear form
+  const editIdField = document.getElementById("editTemplateId");
+  if (editIdField) editIdField.value = "";
+  
+  const editNameField = document.getElementById("editTemplateName");
+  if (editNameField) editNameField.value = "";
+  
+  const editCategoryField = document.getElementById("editTemplateCategory");
+  if (editCategoryField) editCategoryField.value = "";
+  
+  const editDescField = document.getElementById("editTemplateDescription");
+  if (editDescField) editDescField.value = "";
+  
+  const editLinkField = document.getElementById("editTemplateLink");
+  if (editLinkField) editLinkField.value = "";
 }
 
 /**
- * ✅ Save edit template dengan FormData (NO CORS PREFLIGHT)
+ * ✅ Save edit template - FIXED: Proper CORS handling + response waiting
  */
 async function saveEditTemplate() {
-  console.log("💾 Saving template edit...");
+  console.log("💾 Save button clicked");
+  
+  // Ambil elemen
+  const editIdField = document.getElementById("editTemplateId");
+  const editNameField = document.getElementById("editTemplateName");
+  const editCategoryField = document.getElementById("editTemplateCategory");
+  const editDescField = document.getElementById("editTemplateDescription");
+  const editLinkField = document.getElementById("editTemplateLink");
 
-  const {
-    editTemplateId,
-    editTemplateName,
-    editTemplateCategory,
-    editTemplateDescription,
-    editTemplateLink,
-  } = DOM;
-  const id = editTemplateId?.value;
-
+  // Validasi ID - INI KUNCINYA
+  const id = editIdField?.value?.trim();
+  console.log("🔍 Checking ID value:", id, "Field exists:", !!editIdField);
+  
   if (!id) {
-    alert("ID template tidak ditemukan");
+    console.error("❌ ID is EMPTY!");
+    alert("⚠️ Error: ID template tidak ditemukan.\n\n" +
+          "Penyebab:\n" +
+          "1. Input hidden tidak ada di HTML\n" +
+          "2. startEditTemplate tidak dipanggil dengan benar\n\n" +
+          "Silakan tutup modal dan buka ulang.");
     return;
   }
 
-  // Show loading
+  // Validasi field lain
+  const nama = editNameField?.value?.trim();
+  const kategori = editCategoryField?.value;
+  
+  if (!nama) {
+    alert("Nama template wajib diisi");
+    editNameField?.focus();
+    return;
+  }
+  if (!kategori) {
+    alert("Kategori wajib dipilih");
+    return;
+  }
+
+  // Disable button
   const saveBtn = document.querySelector("#modalEditTemplate .btn-primary");
+  if (!saveBtn) {
+    console.error("❌ Save button not found");
+    return;
+  }
+  
+  if (saveBtn.disabled) {
+    console.warn("⚠️ Save button already disabled (preventing double-click)");
+    return;
+  }
+  
   const originalText = saveBtn.innerHTML;
   saveBtn.disabled = true;
   saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
   try {
-    // ✅ Gunakan URLSearchParams
     const params = new URLSearchParams();
     params.append("action", "updateTemplate");
+    params.append("module", "template");
     params.append("id", id);
-    params.append("nama", editTemplateName.value.trim());
-    params.append("kategori", editTemplateCategory.value);
-    params.append("deskripsi", editTemplateDescription.value.trim());
-    params.append("fileLink", editTemplateLink.value);
+    params.append("nama", nama);
+    params.append("kategori", kategori);
+    params.append("deskripsi", editDescField?.value?.trim() || "");
+    params.append("fileLink", editLinkField?.value || "");
 
-    // ✅ FIRE AND FORGET approach untuk hindari CORS
-    fetch(APPS_SCRIPT_URL_TEMPLATE, {
+    console.log("📤 Sending update request...");
+    console.log("   URL:", APPS_SCRIPT_URL_TEMPLATE);
+    console.log("   Params:", Object.fromEntries(params));
+
+    const response = await fetch(APPS_SCRIPT_URL_TEMPLATE, {
       method: "POST",
       body: params,
-      mode: "no-cors", // ✅ Kunci: no-cors mode
-    }).catch((err) => console.warn("Background save:", err));
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
 
-    // ✅ Langsung reload data tanpa tunggu response
-    setTimeout(async () => {
-      closeEditTemplateModal();
+    console.log("📥 Response status:", response.status);
+    const result = await response.json();
+    console.log("📡 Response:", result);
+
+    if (result.success) {
+      // Tutup modal
+      const modal = document.getElementById("modalEditTemplate");
+      if (modal) modal.style.display = "none";
+      
+      // Reload data
       isDataLoaded = false;
       await loadTemplateData();
-      alert("✅ Template berhasil diperbarui!");
-    }, 800);
+      
+      // Pesan sukses
+      if (typeof window.showToast === "function") {
+        window.showToast("success", "Berhasil", "Template berhasil diperbarui");
+      } else {
+        alert("✅ Template berhasil diperbarui!");
+      }
+    } else {
+      throw new Error(result.error || "Update gagal");
+    }
+    
   } catch (error) {
     console.error("❌ Update failed:", error);
-    alert("❌ Gagal memperbarui:\n\n" + error.message);
+    alert("❌ Gagal menyimpan:\n\n" + error.message);
   } finally {
     // Restore button
-    if (saveBtn) {
-      saveBtn.disabled = false;
-      saveBtn.innerHTML = originalText;
-    }
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = originalText;
   }
 }
 
 /**
- * ✅ Delete template dengan FormData (NO CORS PREFLIGHT)
+ * ✅ Delete template - FIXED: Proper response handling
  */
 async function deleteTemplateInline() {
-  console.log("🗑️ Deleting template...");
-
-  const id = DOM.editTemplateId?.value;
+  console.log("🗑️ Delete button clicked");
+  
+  const editIdField = document.getElementById("editTemplateId");
+  const id = editIdField?.value?.trim();
+  
+  console.log("🔍 Delete ID:", id, "Field exists:", !!editIdField);
+  
   if (!id) {
-    alert("ID template tidak ditemukan");
+    console.error("❌ ID is EMPTY!");
+    alert("⚠️ Error: ID template tidak ditemukan.\n\n" +
+          "Silakan tutup modal dan buka ulang.");
     return;
   }
 
-  if (!confirm("Yakin ingin menghapus template ini?")) {
+  const templateItem = templateData.find(t => t.id === id);
+  const templateName = templateItem?.nama || "Template ini";
+  
+  if (!confirm(`Yakin ingin menghapus template:\n\n"${templateName}"?\n\nTindakan ini tidak dapat dibatalkan.`)) {
     return;
   }
 
-  // Show loading
   const deleteBtn = document.querySelector("#modalEditTemplate .btn-danger");
+  if (!deleteBtn) {
+    console.error("❌ Delete button not found");
+    return;
+  }
+  
+  if (deleteBtn.disabled) {
+    console.warn("⚠️ Delete button already disabled");
+    return;
+  }
+  
   const originalText = deleteBtn.innerHTML;
   deleteBtn.disabled = true;
   deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
 
   try {
-    // ✅ Gunakan URLSearchParams
     const params = new URLSearchParams();
     params.append("action", "deleteTemplate");
+    params.append("module", "template");
     params.append("id", id);
 
-    // ✅ FIRE AND FORGET approach
-    fetch(APPS_SCRIPT_URL_TEMPLATE, {
+    console.log("📤 Sending delete request...");
+    console.log("   ID:", id);
+
+    const response = await fetch(APPS_SCRIPT_URL_TEMPLATE, {
       method: "POST",
       body: params,
-      mode: "no-cors", // ✅ Kunci: no-cors mode
-    }).catch((err) => console.warn("Background delete:", err));
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
 
-    // ✅ Langsung reload data
-    setTimeout(async () => {
-      closeEditTemplateModal();
+    const result = await response.json();
+    console.log("📡 Delete response:", result);
+
+    if (result.success) {
+      // Tutup modal
+      const modal = document.getElementById("modalEditTemplate");
+      if (modal) modal.style.display = "none";
+      
+      // Reload
       isDataLoaded = false;
       await loadTemplateData();
-      alert("✅ Template berhasil dihapus!");
-    }, 800);
+      
+      if (typeof window.showToast === "function") {
+        window.showToast("success", "Berhasil", "Template berhasil dihapus");
+      } else {
+        alert("✅ Template berhasil dihapus!");
+      }
+    } else {
+      throw new Error(result.error || "Delete gagal");
+    }
+    
   } catch (error) {
     console.error("❌ Delete failed:", error);
     alert("❌ Gagal menghapus:\n\n" + error.message);
   } finally {
-    // Restore button
     if (deleteBtn) {
       deleteBtn.disabled = false;
       deleteBtn.innerHTML = originalText;
