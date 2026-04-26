@@ -2146,180 +2146,83 @@
 
         <!-- ==================== MODAL EDIT TEMPLATE ==================== -->
         <div id="modalEditTemplate" class="modal-overlay" style="display: none">
-          <div class="modal" style="max-width: 550px">
-            <div class="modal-header">
-              <h3>
-                <i class="fas fa-edit" style="margin-right: 8px"></i> Edit
-                Template
-              </h3>
-              <button class="modal-close" onclick="closeEditTemplateModal()">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div class="modal-body">
-              <input type="hidden" id="editTemplateId" />
-
-              <div
-                style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px"
-              >
-                <!-- Nama Template -->
-                <div class="form-group" style="grid-column: 1 / -1">
-                  <label
-                    style="
-                      font-size: 12px;
-                      font-weight: 600;
-                      color: var(--text-secondary);
-                    "
-                    >Nama Template *</label
-                  >
-                  <input
-                    type="text"
-                    id="editTemplateName"
-                    class="form-control"
-                    required
-                  />
-                </div>
-
-                <!-- Kategori -->
-                <div class="form-group">
-                  <label
-                    style="
-                      font-size: 12px;
-                      font-weight: 600;
-                      color: var(--text-secondary);
-                    "
-                    >Kategori *</label
-                  >
-                  <select
-                    id="editTemplateCategory"
-                    class="form-control"
-                    required
-                  >
-                    <option value="surat_masuk">📥 Surat Masuk</option>
-                    <option value="surat_keluar">📤 Surat Keluar</option>
-                    <option value="nota_dinas">📝 Nota Dinas</option>
-                    <option value="undangan">🎫 Surat Undangan</option>
-                    <option value="lainnya">📁 Lainnya</option>
-                  </select>
-                </div>
-
-                <!-- File Info (Read-only) -->
-                <div class="form-group">
-                  <label
-                    style="
-                      font-size: 12px;
-                      font-weight: 600;
-                      color: var(--text-secondary);
-                    "
-                    >File</label
-                  >
-                  <div class="file-info">
-                    <span id="editFileName" style="font-weight: 500"></span>
-                    <span
-                      id="editFileSize"
-                      style="color: var(--text-muted); margin-left: 8px"
-                    ></span>
-                  </div>
-                </div>
-
-                <!-- Deskripsi -->
-                <div class="form-group" style="grid-column: 1 / -1">
-                  <label
-                    style="
-                      font-size: 12px;
-                      font-weight: 600;
-                      color: var(--text-secondary);
-                    "
-                    >Deskripsi</label
-                  >
-                  <textarea
-                    id="editTemplateDescription"
-                    class="form-control"
-                    rows="3"
-                  ></textarea>
-                </div>
-
-                <!-- File Link -->
-                <div class="form-group" style="grid-column: 1 / -1">
-                  <label
-                    style="
-                      font-size: 12px;
-                      font-weight: 600;
-                      color: var(--text-secondary);
-                    "
-                    >Link File</label
-                  >
-                  <div style="display: flex; gap: 8px">
-                    <input
-                      type="text"
-                      id="editTemplateLink"
-                      class="form-control"
-                      placeholder="https://drive.google.com/..."
-                      readonly
-                      style="background: var(--bg-main)"
-                    />
-                    <button
-                      class="btn btn-outline btn-sm"
-                      onclick="openTemplateFile()"
-                      title="Buka file"
-                    >
-                      <i class="fas fa-external-link-alt"></i>
-                    </button>
-                    <button
-                      class="btn btn-outline btn-sm"
-                      onclick="copyTemplateLink()"
-                      title="Salin link"
-                    >
-                      <i class="fas fa-copy"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Preview Section -->
-              <div id="templatePreviewSection" style="display: none">
-                <div
-                  style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 12px;
-                  "
-                >
-                  <h4 style="margin: 0; font-size: 14px; font-weight: 600">
-                    Preview Template
-                  </h4>
-                  <span class="status-badge process" style="font-size: 10px"
-                    ><i class="fas fa-info-circle"></i> Preview hanya untuk
-                    PDF</span
-                  >
-                </div>
-                <div id="pdfPreview">
-                  <i class="fas fa-file-pdf" style="margin-right: 8px"></i>
-                  Preview akan muncul di sini
-                </div>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button
-                class="btn btn-danger"
-                onclick="deleteTemplateInline()"
-                style="margin-right: auto"
-              >
-                <i class="fas fa-trash"></i> Hapus
-              </button>
-              <button
-                class="btn btn-outline"
-                onclick="closeEditTemplateModal()"
-              >
-                Batal
-              </button>
-              <button class="btn btn-primary" onclick="saveEditTemplate()">
-                <i class="fas fa-save"></i> Simpan Perubahan
-              </button>
-            </div>
+  <div class="modal" style="max-width: 550px">
+    <div class="modal-header">
+      <h3><i class="fas fa-edit" style="margin-right: 8px"></i> Edit Template</h3>
+      <button class="modal-close" onclick="closeEditTemplateModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <!-- ✅ WAJIB ADA INI -->
+      <input type="hidden" id="editTemplateId" />
+      
+      <!-- Form fields -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+        <div class="form-group" style="grid-column: 1 / -1">
+          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary)">
+            Nama Template *
+          </label>
+          <input type="text" id="editTemplateName" class="form-control" required />
+        </div>
+        
+        <div class="form-group">
+          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary)">
+            Kategori *
+          </label>
+          <select id="editTemplateCategory" class="form-control" required>
+            <option value="surat_masuk">📥 Surat Masuk</option>
+            <option value="surat_keluar">📤 Surat Keluar</option>
+            <option value="nota_dinas">📝 Nota Dinas</option>
+            <option value="undangan">🎫 Surat Undangan</option>
+            <option value="lainnya">📁 Lainnya</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary)">
+            File
+          </label>
+          <div class="file-info">
+            <span id="editFileName" style="font-weight: 500"></span>
+            <span id="editFileSize" style="color: var(--text-muted); margin-left: 8px"></span>
           </div>
         </div>
+        
+        <div class="form-group" style="grid-column: 1 / -1">
+          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary)">
+            Deskripsi
+          </label>
+          <textarea id="editTemplateDescription" class="form-control" rows="3"></textarea>
+        </div>
+        
+        <div class="form-group" style="grid-column: 1 / -1">
+          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary)">
+            Link File
+          </label>
+          <div style="display: flex; gap: 8px">
+            <input type="text" id="editTemplateLink" class="form-control" readonly 
+                   style="background: var(--bg-main)" />
+            <button class="btn btn-outline btn-sm" onclick="openTemplateFile()" title="Buka file">
+              <i class="fas fa-external-link-alt"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="deleteTemplateInline()" style="margin-right: auto">
+        <i class="fas fa-trash"></i> Hapus
+      </button>
+      <button class="btn btn-outline" onclick="closeEditTemplateModal()">
+        Batal
+      </button>
+      <button class="btn btn-primary" onclick="saveEditTemplate()">
+        <i class="fas fa-save"></i> Simpan Perubahan
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ==================== AGENDA PAGE ==================== -->
 <div class="page" id="page-agenda">
