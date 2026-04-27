@@ -405,6 +405,8 @@ async function loadInternationalStats() {
     globalDataNonDegree = Array.isArray(dataNonDegree) ? dataNonDegree : [];
     globalDataCalon = Array.isArray(dataCalon) ? dataCalon : [];
 
+    console.log("📋 Sample DATA MAHASISWA:", globalDataMahasiswa[0]);
+
     const statsDegree = processMahasiswaDegree(globalDataMahasiswa);
     const statsNonDegree = processMahasiswaNonDegree(globalDataNonDegree);
     const statsCalon = processCalonMahasiswaAsing(globalDataCalon);
@@ -423,7 +425,7 @@ async function loadInternationalStats() {
 
     renderInternationalStats(finalStats);
 
-    // ✅ Render country map
+    // ✅ Render charts dengan delay yang cukup
     setTimeout(() => {
       console.log("🗺️ Initializing country map...");
       const mapSuccess = initCountryMap();
@@ -431,10 +433,12 @@ async function loadInternationalStats() {
         console.error("❌ Failed to initialize country map");
       }
 
-      // ✅ Render trend chart AFTER map
+      console.log("📊 Initializing international chart (tahun_masuk)...");
+      initIntlChart();
+
       console.log("📈 Initializing trend chart...");
       renderTrendChart();
-    }, 500);
+    }, 1000); // ✅ Increased delay to 1 second
 
     return finalStats;
   } catch (error) {
@@ -488,13 +492,189 @@ function simpanNegara() {
   }, 500);
 }
 
+/**
+ * Render Chart Distribusi Mahasiswa Internasional per Tahun Masuk + Fakultas
+ * - Stacked bar chart
+ * - Y-axis step: 50
+ */
 function initIntlChart() {
-  if (typeof window.createBarChart === "function" && window.CHART_DATA) {
-    window.createBarChart("intlChart", window.CHART_DATA.international, {
-      maxHeight: 180,
-      showLabels: true,
+  console.log("🔍 Mencari element #intlChart...");
+  console.log("📊 globalDataMahasiswa length:", globalDataMahasiswa.length);
+  
+  let container = document.getElementById("intlChart");
+  
+  if (!container) {
+    container = document.querySelector("#intlChart");
+  }
+  
+  if (!container) {
+    const chartAreas = document.querySelectorAll('.chart-area');
+    chartAreas.forEach((area, index) => {
+      if (area.id === "intlChart" || area.closest('.card')?.querySelector('h3')?.textContent?.includes('Mahasiswa Internasional')) {
+        container = area;
+      }
     });
   }
+  
+  if (!container) {
+    console.error("❌ Element #intlChart TIDAK DITEMUKAN di DOM!");
+    return;
+  }
+  
+  console.log("✅ Element #intlChart ditemukan:", container);
+
+  // Clear container dan buat canvas
+  container.innerHTML = '<canvas id="intlChartCanvas" style="width:100%; height:100%;"></canvas>';
+  const chartCanvas = document.getElementById("intlChartCanvas");
+  
+  if (!chartCanvas) {
+    console.error("❌ Gagal membuat canvas!");
+    return;
+  }
+
+  if (!container.style.height || container.style.height === 'auto') {
+    container.style.height = '350px'; // Sedikit lebih tinggi untuk legend
+  }
+
+  // Destroy instance lama
+  if (window.intlChartInstance) {
+    try {
+      window.intlChartInstance.destroy();
+    } catch (e) {}
+  }
+
+  // Process data
+  console.log("📊 Processing data tahun_masuk + fakultas...", globalDataMahasiswa.length, "items");
+  const chartData = processMahasiswaByTahunMasuk(globalDataMahasiswa);
+
+  if (chartData.labels.length === 0 || chartData.datasets.length === 0) {
+    console.warn("⚠️ Tidak ada data tahun_masuk/fakultas untuk ditampilkan");
+    container.innerHTML = `
+      <div style="text-align: center; padding: 40px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+        <i class="fas fa-chart-bar" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+        <p>Belum ada data distribusi tahun masuk</p>
+        <small style="margin-top: 8px; opacity: 0.7;">Pastikan kolom 'tahun_masuk' dan 'fakultas' terisi di DATA MAHASISWA</small>
+      </div>
+    `;
+    return;
+  }
+
+  if (typeof Chart === "undefined") {
+    console.error("❌ Chart.js belum ter-load!");
+    return;
+  }
+
+  console.log("📈 Membuat stacked bar chart dengan", chartData.labels.length, "tahun,", chartData.datasets.length, "fakultas");
+
+  const ctx = chartCanvas.getContext("2d");
+
+  window.intlChartInstance = new Chart(ctx, {
+  type: "bar",
+  data: {
+    labels: chartData.labels,
+    datasets: chartData.datasets
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    
+    // ✅ STACKED BAR CONFIG
+    scales: {
+      x: {
+        stacked: true,
+        grid: { display: false },
+        ticks: { 
+          font: { size: 11, weight: "600" },
+          color: "var(--text-secondary)"
+        },
+        title: {
+          display: true,
+          text: "Tahun Masuk",
+          font: { size: 12, weight: "700" },
+          color: "var(--text-primary)"
+        }
+      },
+      y: {
+        stacked: true,
+        beginAtZero: true,
+        ticks: {
+          stepSize: 50,
+          font: { size: 10 },
+          color: "var(--text-muted)",
+          callback: function(value) {
+            return value >= 1000 ? (value/1000).toFixed(1) + 'K' : value;
+          }
+        },
+        grid: { 
+          color: "rgba(49, 130, 206, 0.1)",
+          borderDash: [5, 5]
+        },
+        title: {
+          display: true,
+          text: "Jumlah Mahasiswa",
+          font: { size: 12, weight: "700" },
+          color: "var(--text-primary)"
+        }
+      }
+    },
+    
+    animation: {
+      duration: 1000,
+      easing: "easeOutQuart"
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: "bottom",
+        labels: {
+          font: { size: 10 },
+          boxWidth: 12,
+          padding: 15,
+          usePointStyle: true,
+        }
+      },
+      // ✅ TOOLTIP YANG DIPERBAIKI - Hanya tampilkan yang di-hover
+      tooltip: {
+        backgroundColor: "rgba(26, 54, 93, 0.95)",
+        titleColor: "#fff",
+        bodyColor: "#fff",
+        padding: 12,
+        cornerRadius: 8,
+        // 🎯 PENTING: Hanya tampilkan 1 item (yang di-hover)
+        filter: function(tooltipItem, data) {
+          // Hanya tampilkan dataset yang sedang di-hover
+          return true;
+        },
+        callbacks: {
+          // Hilangkan title jika tidak perlu
+          title: (ctx) => {
+            return `📅 Tahun ${ctx[0].label}`;
+          },
+          // 🎯 Hanya tampilkan 1 fakultas yang di-hover
+          label: (ctx) => {
+            const faculty = ctx.dataset.label;
+            const count = ctx.raw;
+            return `🏛️ ${faculty}: ${count} mahasiswa`;
+          },
+          // ❌ HAPUS afterLabel yang menampilkan total semua fakultas
+        }
+      }
+    },
+    // ✅ HOVER MODE - UBAH DARI "index" KE "point"
+    interaction: {
+      mode: "point",      // 🎯 Ubah dari "index" ke "point"
+      intersect: true     // 🎯 Ubah dari false ke true
+    },
+    // Optional: hover effect yang lebih smooth
+    hover: {
+      mode: "point",
+      intersect: true,
+      animationDuration: 200
+    }
+  }
+});
+
+  console.log("✅ intlChart rendered successfully!");
 }
 
 function initInternational() {
@@ -545,13 +725,20 @@ if (typeof window !== "undefined") {
 // Auto-load saat DOM ready
 if (typeof document !== "undefined") {
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initInternational);
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("📄 DOM Loaded, initializing International module...");
+      initInternational();
+    });
   } else {
+    console.log("📄 DOM already loaded, initializing International module...");
     initInternational();
   }
 }
 /**
  * 🌍 COUNTRY DISTRIBUTION MAP - Versi dengan Error Handling Lengkap
+ */
+/**
+ * 🌍 COUNTRY DISTRIBUTION MAP - Versi Responsive & Stabil
  */
 function initCountryMap() {
   console.log("\n=== 🗺️ INIT COUNTRY MAP ===");
@@ -562,11 +749,24 @@ function initCountryMap() {
     return false;
   }
 
+  // ✅ PASTIKAN CONTAINER MEMILIKI DIMENSI
+  const rect = container.getBoundingClientRect();
+  console.log("📏 Container dimensions:", {
+    width: rect.width,
+    height: rect.height,
+    offsetWidth: container.offsetWidth,
+    offsetHeight: container.offsetHeight
+  });
+
+  // Jika container terlalu kecil atau hidden, tunggu sebentar
+  if (rect.width === 0 || rect.height === 0) {
+    console.warn("⚠️ Container belum siap, menunggu 300ms...");
+    setTimeout(() => initCountryMap(), 300);
+    return false;
+  }
+
   // Deteksi mobile
-  const isMobile =
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent,
-    ) || window.innerWidth < 768;
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 
   console.log("📱 Is mobile:", isMobile);
   console.log("📐 Screen width:", window.innerWidth);
@@ -574,9 +774,11 @@ function initCountryMap() {
   if (typeof jsVectorMap === "undefined") {
     console.error("❌ jsVectorMap belum ter-load!");
     container.innerHTML = `
-      <div style="padding: 40px; text-align: center; color: #ef4444;">
-        <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px;"></i>
-        <p>Library jsVectorMap belum ter-load</p>
+      <div style="padding: 40px; text-align: center; color: #ef4444; display: flex; align-items: center; justify-content: center; height: 100%;">
+        <div>
+          <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px;"></i>
+          <p>Library jsVectorMap belum ter-load</p>
+        </div>
       </div>
     `;
     return false;
@@ -586,14 +788,20 @@ function initCountryMap() {
   if (window.countryMapInstance) {
     try {
       window.countryMapInstance.destroy();
-    } catch (e) {}
+      console.log("🔄 Old map instance destroyed");
+    } catch (e) {
+      console.warn("⚠️ Error destroying old instance:", e);
+    }
   }
 
   const students = globalDataMahasiswa || [];
   if (students.length === 0) {
     container.innerHTML = `
-      <div style="padding: 40px; text-align: center; color: #6b7280;">
-        <p>Tidak ada data mahasiswa</p>
+      <div style="padding: 40px; text-align: center; color: #6b7280; display: flex; align-items: center; justify-content: center; height: 100%;">
+        <div>
+          <i class="fas fa-users" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+          <p>Tidak ada data mahasiswa</p>
+        </div>
       </div>
     `;
     return false;
@@ -609,126 +817,42 @@ function initCountryMap() {
     }
   });
 
-  // Mapping negara (sama seperti sebelumnya)
+  // Mapping negara
   const countryISOMap = {
-    Afghanistan: "AF",
-    Albania: "AL",
-    Algeria: "DZ",
-    Argentina: "AR",
-    Australia: "AU",
-    Austria: "AT",
-    Bahrain: "BH",
-    Bangladesh: "BD",
-    Belarus: "BY",
-    Bolivia: "BO",
-    Brazil: "BR",
-    "Brunei Darussalam": "BN",
-    Cambodia: "KH",
-    Cameroon: "CM",
-    Canada: "CA",
-    Chad: "TD",
-    Chile: "CL",
-    China: "CN",
-    Colombia: "CO",
-    "Costa Rica": "CR",
-    Croatia: "HR",
-    Cuba: "CU",
-    Cyprus: "CY",
-    "Czech Republic": "CZ",
-    Denmark: "DK",
-    Ecuador: "EC",
-    Egypt: "EG",
-    Estonia: "EE",
-    Ethiopia: "ET",
-    Finland: "FI",
-    France: "FR",
-    Georgia: "GE",
-    Germany: "DE",
-    Ghana: "GH",
-    Greece: "GR",
-    Hungary: "HU",
-    Iceland: "IS",
-    India: "IN",
-    Indonesia: "ID",
-    Iran: "IR",
-    Iraq: "IQ",
-    Ireland: "IE",
-    Israel: "IL",
-    Italy: "IT",
-    Japan: "JP",
-    Jordan: "JO",
-    Kazakhstan: "KZ",
-    Kenya: "KE",
-    Kuwait: "KW",
-    Latvia: "LV",
-    Lebanon: "LB",
-    Libya: "LY",
-    Lithuania: "LT",
-    Luxembourg: "LU",
-    Malaysia: "MY",
-    Maldives: "MV",
-    Malta: "MT",
-    Mexico: "MX",
-    Moldova: "MD",
-    Monaco: "MC",
-    Mongolia: "MN",
-    Montenegro: "ME",
-    Morocco: "MA",
-    Myanmar: "MM",
-    Nepal: "NP",
-    Netherlands: "NL",
-    "New Zealand": "NZ",
-    Nigeria: "NG",
-    "North Macedonia": "MK",
-    Norway: "NO",
-    Oman: "OM",
-    Pakistan: "PK",
-    Palestine: "PS",
-    Panama: "PA",
-    Paraguay: "PY",
-    Peru: "PE",
-    Philippines: "PH",
-    Poland: "PL",
-    Portugal: "PT",
-    Qatar: "QA",
-    Romania: "RO",
-    Russia: "RU",
-    "Saudi Arabia": "SA",
-    Senegal: "SN",
-    Serbia: "RS",
-    Singapore: "SG",
-    Slovakia: "SK",
-    Slovenia: "SI",
-    Somalia: "SO",
-    "South Africa": "ZA",
-    "South Korea": "KR",
-    Spain: "ES",
-    "Sri Lanka": "LK",
-    Sudan: "SD",
-    Sweden: "SE",
-    Switzerland: "CH",
-    Syria: "SY",
-    Taiwan: "TW",
-    Tajikistan: "TJ",
-    Tanzania: "TZ",
-    Thailand: "TH",
-    Tunisia: "TN",
-    Turkey: "TR",
-    Turkmenistan: "TM",
-    Uganda: "UG",
-    Ukraine: "UA",
-    "United Arab Emirates": "AE",
-    "United Kingdom": "GB",
-    "United States": "US",
-    Uruguay: "UY",
-    Uzbekistan: "UZ",
-    Venezuela: "VE",
-    Vietnam: "VN",
-    Yemen: "YE",
+    Afghanistan: "AF", Albania: "AL", Algeria: "DZ", Argentina: "AR",
+    Australia: "AU", Austria: "AT", Bahrain: "BH", Bangladesh: "BD",
+    Belarus: "BY", Bolivia: "BO", Brazil: "BR", "Brunei Darussalam": "BN",
+    Cambodia: "KH", Cameroon: "CM", Canada: "CA", Chad: "TD", Chile: "CL",
+    China: "CN", Colombia: "CO", "Costa Rica": "CR", Croatia: "HR",
+    Cuba: "CU", Cyprus: "CY", "Czech Republic": "CZ", Denmark: "DK",
+    Ecuador: "EC", Egypt: "EG", Estonia: "EE", Ethiopia: "ET",
+    Finland: "FI", France: "FR", Georgia: "GE", Germany: "DE",
+    Ghana: "GH", Greece: "GR", Hungary: "HU", Iceland: "IS",
+    India: "IN", Indonesia: "ID", Iran: "IR", Iraq: "IQ",
+    Ireland: "IE", Israel: "IL", Italy: "IT", Japan: "JP",
+    Jordan: "JO", Kazakhstan: "KZ", Kenya: "KE", Kuwait: "KW",
+    Latvia: "LV", Lebanon: "LB", Libya: "LY", Lithuania: "LT",
+    Luxembourg: "LU", Malaysia: "MY", Maldives: "MV", Malta: "MT",
+    Mexico: "MX", Moldova: "MD", Monaco: "MC", Mongolia: "MN",
+    Montenegro: "ME", Morocco: "MA", Myanmar: "MM", Nepal: "NP",
+    Netherlands: "NL", "New Zealand": "NZ", Nigeria: "NG",
+    "North Macedonia": "MK", Norway: "NO", Oman: "OM", Pakistan: "PK",
+    Palestine: "PS", Panama: "PA", Paraguay: "PY", Peru: "PE",
+    Philippines: "PH", Poland: "PL", Portugal: "PT", Qatar: "QA",
+    Romania: "RO", Russia: "RU", "Saudi Arabia": "SA", Senegal: "SN",
+    Serbia: "RS", Singapore: "SG", Slovakia: "SK", Slovenia: "SI",
+    Somalia: "SO", "South Africa": "ZA", "South Korea": "KR",
+    Spain: "ES", "Sri Lanka": "LK", Sudan: "SD", Sweden: "SE",
+    Switzerland: "CH", Syria: "SY", Taiwan: "TW", Tajikistan: "TJ",
+    Tanzania: "TZ", Thailand: "TH", Tunisia: "TN", Turkey: "TR",
+    Turkmenistan: "TM", Uganda: "UG", Ukraine: "UA",
+    "United Arab Emirates": "AE", "United Kingdom": "GB",
+    "United States": "US", Uruguay: "UY", Uzbekistan: "UZ",
+    Venezuela: "VE", Vietnam: "VN", Yemen: "YE",
   };
 
   const isoToCountry = Object.fromEntries(
-    Object.entries(countryISOMap).map(([name, iso]) => [iso, name]),
+    Object.entries(countryISOMap).map(([name, iso]) => [iso, name])
   );
 
   const mapData = {};
@@ -741,6 +865,9 @@ function initCountryMap() {
 
   console.log(`📊 Mapped: ${Object.keys(mapData).length} countries`);
 
+  // ✅ CLEAR CONTAINER SEBELUM INIT
+  container.innerHTML = '';
+
   // ✅ KONFIGURASI RESPONSIVE
   try {
     window.countryMapInstance = new jsVectorMap({
@@ -748,9 +875,9 @@ function initCountryMap() {
       map: "world",
 
       // ✅ MOBILE OPTIMIZATION
-      zoomButtons: !isMobile, // Hide zoom buttons on mobile
+      zoomButtons: !isMobile,
       zoomOnScroll: !isMobile,
-      zoomOnPinch: isMobile, // Enable pinch zoom on mobile
+      zoomOnPinch: isMobile,
       panOnDrag: true,
 
       // ✅ RESPONSIVE SETTINGS
@@ -793,41 +920,29 @@ function initCountryMap() {
         ],
       },
 
-      // ✅ TOOLTIP UNTUK MOBILE & DESKTOP
+      // ✅ TOOLTIP
       onRegionTooltipShow: function (event, tooltip, code) {
         const value = mapData[code] || 0;
         const totalStudents = students.length;
-        const percent = totalStudents
-          ? ((value / totalStudents) * 100).toFixed(1)
-          : 0;
+        const percent = totalStudents ? ((value / totalStudents) * 100).toFixed(1) : 0;
         const countryName = isoToCountry[code] || code;
 
-        const barLength = isMobile ? 8 : 10;
-        const filled = Math.round((percent / 100) * barLength);
-        const progressBar = "█".repeat(filled) + "░".repeat(barLength - filled);
-
-        // Set tooltip dengan setTimeout untuk memastikan element ada
         setTimeout(() => {
           const tooltipEl = document.querySelector(".jvm-tooltip");
           if (tooltipEl) {
             tooltipEl.innerHTML = `
-              <div style="font-family: system-ui, sans-serif; line-height: 1.4;">
+              <div style="font-family: system-ui, sans-serif; line-height: 1.4; padding: 8px;">
                 <div style="font-weight: 600; margin-bottom: 4px; color: #1f2937; font-size: ${isMobile ? "13px" : "14px"};">
                   🌍 ${countryName}
                 </div>
                 <div style="margin-bottom: 4px; color: #374151;">
                   👨‍🎓 <strong>${value}</strong> Mahasiswa
                 </div>
-                ${
-                  isMobile
-                    ? ""
-                    : `
-                  <div style="font-family: monospace; color: #6b7280; margin-bottom: 4px; font-size: 11px; letter-spacing: 1px;">
-                    ${progressBar}
+                ${!isMobile ? `
+                  <div style="color: #6b7280; font-size: 11px;">
+                    📊 ${percent}% dari total
                   </div>
-                  
-                `
-                }
+                ` : ''}
               </div>
             `;
           }
@@ -839,7 +954,6 @@ function initCountryMap() {
         const count = mapData[code] || 0;
 
         if (isMobile) {
-          // Show alert untuk mobile (lebih user-friendly)
           alert(`${countryName}\n👨‍🎓 ${count} Mahasiswa`);
         } else {
           console.log(`📍 Clicked: ${countryName} (${count} students)`);
@@ -853,6 +967,14 @@ function initCountryMap() {
     });
 
     console.log("✅ Map rendered successfully!");
+
+    // ✅ PENTING: Panggil updateSize setelah render
+    setTimeout(() => {
+      if (window.countryMapInstance) {
+        window.countryMapInstance.updateSize();
+        console.log("📏 Map size updated after init");
+      }
+    }, 100);
 
     // ✅ HANDLE WINDOW RESIZE
     let resizeTimer;
@@ -870,13 +992,20 @@ function initCountryMap() {
   } catch (error) {
     console.error("❌ Error rendering map:", error);
     container.innerHTML = `
-      <div style="padding: 40px; text-align: center; color: #ef4444;">
-        <p>Error: ${error.message}</p>
+      <div style="padding: 40px; text-align: center; color: #ef4444; display: flex; align-items: center; justify-content: center; height: 100%;">
+        <div>
+          <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 16px;"></i>
+          <p>Error: ${error.message}</p>
+          <button onclick="loadInternationalStats()" style="margin-top: 16px; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            <i class="fas fa-redo"></i> Retry
+          </button>
+        </div>
       </div>
     `;
     return false;
   }
 }
+
 // Handle screen rotation
 window.addEventListener("orientationchange", function () {
   setTimeout(function () {
@@ -940,7 +1069,134 @@ function processTrenPenerimaan(data) {
     values: values,
   };
 }
+/**
+ * Proses data Mahasiswa berdasarkan tahun_masuk DAN fakultas
+ * @param {Array} data - Data dari sheet DATA MAHASISWA
+ * @returns {Object} - { labels: [], datasets: [] } untuk stacked bar chart
+ */
+function processMahasiswaByTahunMasuk(data) {
+  console.log("🔍 processMahasiswaByTahunMasuk called with", data?.length, "items");
+  
+  if (!Array.isArray(data)) {
+    console.error("❌ processMahasiswaByTahunMasuk: data bukan array!", data);
+    return { labels: [], datasets: [] };
+  }
 
+  // Struktur: { tahun: { fakultas: count } }
+  const yearFacultyCount = {};
+  const facultySet = new Set();
+  let processedCount = 0;
+  let skippedCount = 0;
+
+  data.forEach((item, index) => {
+    if (!item) return;
+
+    // 🔍 Ambil tahun_masuk
+    const tahunMasuk = 
+      item.tahun_masuk || 
+      item.Tahun_Masuk || 
+      item["tahun_masuk"] || 
+      item["Tahun Masuk"] || 
+      item.tahunMasuk ||
+      item.year_entry ||
+      null;
+
+    // 🔍 Ambil fakultas (sesuaikan dengan nama kolom di Google Sheets)
+    const fakultas = 
+      item.fakultas || 
+      item.Fakultas || 
+      item["fakultas"] || 
+      item["Nama Fakultas"] || 
+      item.faculty ||
+      item["Faculty"] ||
+      "Lainnya"; // Default jika kosong
+
+    if (index < 3) {
+      console.log(`Item ${index}:`, { 
+        tahun_masuk: tahunMasuk,
+        fakultas: fakultas,
+        allKeys: Object.keys(item)
+      });
+    }
+
+    if (tahunMasuk) {
+      let year = null;
+      
+      if (typeof tahunMasuk === 'number') {
+        year = tahunMasuk;
+      } else if (typeof tahunMasuk === 'string') {
+        const match = tahunMasuk.trim().match(/\b(19|20)\d{2}\b/);
+        if (match) year = parseInt(match[0]);
+      } else if (tahunMasuk instanceof Date) {
+        year = tahunMasuk.getFullYear();
+      }
+
+      if (year && year >= 1900 && year <= 2100) {
+        // Inisialisasi tahun jika belum ada
+        if (!yearFacultyCount[year]) {
+          yearFacultyCount[year] = {};
+        }
+        
+        // Bersihkan nama fakultas
+        const facultyName = String(fakultas).trim() || "Lainnya";
+        facultySet.add(facultyName);
+        
+        // Hitung per fakultas per tahun
+        yearFacultyCount[year][facultyName] = (yearFacultyCount[year][facultyName] || 0) + 1;
+        processedCount++;
+      } else {
+        skippedCount++;
+      }
+    } else {
+      skippedCount++;
+    }
+  });
+
+  // Urutkan tahun ascending
+  const sortedYears = Object.keys(yearFacultyCount)
+    .map(y => parseInt(y))
+    .sort((a, b) => a - b);
+
+  // Buat datasets per fakultas
+  const facultyList = Array.from(facultySet).sort();
+  const datasets = facultyList.map((faculty, index) => {
+    // Generate warna berbeda per fakultas
+    const colors = [
+      { bg: 'rgba(49, 130, 206, 0.8)', border: 'rgba(49, 130, 206, 1)' },   // Biru
+      { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgba(16, 185, 129, 1)' },   // Hijau
+      { bg: 'rgba(245, 158, 11, 0.8)', border: 'rgba(245, 158, 11, 1)' },   // Kuning
+      { bg: 'rgba(139, 92, 246, 0.8)', border: 'rgba(139, 92, 246, 1)' },   // Ungu
+      { bg: 'rgba(236, 72, 153, 0.8)', border: 'rgba(236, 72, 153, 1)' },   // Pink
+      { bg: 'rgba(14, 165, 233, 0.8)', border: 'rgba(14, 165, 233, 1)' },   // Cyan
+      { bg: 'rgba(249, 115, 22, 0.8)', border: 'rgba(249, 115, 22, 1)' },   // Orange
+      { bg: 'rgba(107, 114, 128, 0.8)', border: 'rgba(107, 114, 128, 1)' }, // Abu
+    ];
+    const color = colors[index % colors.length];
+
+    return {
+      label: faculty,
+      data: sortedYears.map(year => yearFacultyCount[year][faculty] || 0),
+      backgroundColor: color.bg,
+      borderColor: color.border,
+      borderWidth: 1,
+      borderRadius: 4,
+      borderSkipped: false,
+    };
+  });
+
+  console.log("📊 Distribusi Mahasiswa per Tahun & Fakultas:", { 
+    totalItems: data.length,
+    processed: processedCount,
+    skipped: skippedCount,
+    years: sortedYears,
+    faculties: facultyList,
+  });
+
+  return {
+    labels: sortedYears.map(String),
+    datasets: datasets
+  };
+}
 /**
  * Render Chart Tren Penerimaan - Enhanced Version
  */
